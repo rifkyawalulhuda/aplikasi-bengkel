@@ -2,6 +2,7 @@
     import { Link, page } from '@inertiajs/svelte';
     import { create as bookingCreate } from '@/routes/bookings';
     import { Button } from '@/components/ui/button';
+    import PublicBrandMark from '@/components/public/PublicBrandMark.svelte';
 
     let {
         brandName,
@@ -51,15 +52,22 @@
     );
 </script>
 
-<header class="sticky top-0 z-40 border-b border-border/70 bg-background/86 backdrop-blur-xl">
-    <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 md:px-6">
+<header
+    class="sticky top-0 z-40 border-b border-border/70 bg-background/86 backdrop-blur-xl"
+>
+    <div
+        class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 md:px-6"
+    >
         <Link href="/" class="flex min-w-0 items-center gap-3">
-            <span class="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary text-sm font-black uppercase tracking-[0.18em] text-primary-foreground">
-                ASM
-            </span>
+            <PublicBrandMark
+                class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/90 p-1 shadow-sm ring-1 ring-black/5"
+                imageClass="h-full w-full rounded-[0.85rem] object-contain"
+            />
             <span class="flex min-w-0 flex-col">
-                <span class="truncate text-[11px] font-semibold uppercase tracking-[0.26em] text-primary">
-                    Home Service
+                <span
+                    class="truncate text-[11px] font-semibold uppercase tracking-[0.26em] text-primary"
+                >
+                    ASM MOTOR
                 </span>
                 <span class="truncate text-base font-semibold text-foreground">
                     {brandName}
@@ -119,7 +127,9 @@
                 class="h-11 rounded-full bg-secondary px-5 text-sm font-semibold text-secondary-foreground shadow-[0_20px_40px_-22px_rgb(var(--brand-secondary-rgb)/0.85)] hover:bg-secondary/92"
             >
                 {#snippet children(props)}
-                    <Link href={bookingCreate()} {...props}>Booking Sekarang</Link>
+                    <Link href={bookingCreate()} {...props}
+                        >Booking Sekarang</Link
+                    >
                 {/snippet}
             </Button>
 

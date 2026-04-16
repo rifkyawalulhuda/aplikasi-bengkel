@@ -1,6 +1,7 @@
 <script lang="ts">
     import { Link } from '@inertiajs/svelte';
     import { create as bookingCreate } from '@/routes/bookings';
+    import PublicBrandMark from '@/components/public/PublicBrandMark.svelte';
 
     let {
         brandName,
@@ -48,15 +49,23 @@
     );
 </script>
 
-<footer class="border-t border-primary/20 bg-[linear-gradient(180deg,#03AED2_0%,#0295B4_100%)] text-white">
-    <div class="mx-auto grid max-w-7xl gap-10 px-4 py-12 md:grid-cols-[1.15fr_0.85fr_0.9fr] md:px-6 md:py-14">
+<footer
+    class="border-t border-primary/20 bg-[linear-gradient(180deg,#03AED2_0%,#0295B4_100%)] text-white"
+>
+    <div
+        class="mx-auto grid max-w-7xl gap-10 px-4 py-12 md:grid-cols-[1.15fr_0.85fr_0.9fr] md:px-6 md:py-14"
+    >
         <div class="flex flex-col gap-4">
             <div class="flex items-center gap-3">
-                <span class="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-sm font-black uppercase tracking-[0.18em] text-primary">
-                    ASM
-                </span>
+                <PublicBrandMark
+                    class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white p-1 shadow-sm"
+                    imageClass="h-full w-full rounded-[0.85rem] object-contain"
+                    alt="Logo Bengkel Home Service"
+                />
                 <div>
-                    <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/80">
+                    <p
+                        class="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/80"
+                    >
                         Home Service
                     </p>
                     <p class="text-lg font-bold tracking-[-0.02em] text-white">
@@ -73,19 +82,32 @@
         </div>
 
         <div class="flex flex-col gap-3">
-            <p class="text-sm font-semibold uppercase tracking-[0.16em] text-white">
+            <p
+                class="text-sm font-semibold uppercase tracking-[0.16em] text-white"
+            >
                 Navigasi
             </p>
             <div class="flex flex-col gap-2 text-sm text-white/84">
-                <a class="transition-colors hover:text-accent" href="#services">Layanan</a>
-                <a class="transition-colors hover:text-accent" href="#packages">Paket</a>
-                <a class="transition-colors hover:text-accent" href="#faq">FAQ</a>
-                <Link class="transition-colors hover:text-accent" href={bookingCreate()}>Booking Sekarang</Link>
+                <a class="transition-colors hover:text-accent" href="#services"
+                    >Layanan</a
+                >
+                <a class="transition-colors hover:text-accent" href="#packages"
+                    >Paket</a
+                >
+                <a class="transition-colors hover:text-accent" href="#faq"
+                    >FAQ</a
+                >
+                <Link
+                    class="transition-colors hover:text-accent"
+                    href={bookingCreate()}>Booking Sekarang</Link
+                >
             </div>
         </div>
 
         <div class="flex flex-col gap-3">
-            <p class="text-sm font-semibold uppercase tracking-[0.16em] text-white">
+            <p
+                class="text-sm font-semibold uppercase tracking-[0.16em] text-white"
+            >
                 Kontak
             </p>
             <p class="text-sm leading-7 text-white/84">
@@ -99,16 +121,27 @@
             >
                 {displayedPhone}
             </a>
-            <Link class="text-sm text-white/84 transition-colors hover:text-accent" href="/admin/login">
+            <Link
+                class="text-sm text-white/84 transition-colors hover:text-accent"
+                href="/admin/login"
+            >
                 Login admin
             </Link>
         </div>
     </div>
 
     <div class="border-t border-white/20">
-        <div class="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-4 text-xs text-white/72 md:flex-row md:items-center md:justify-between md:px-6">
-            <p>&copy; 2026 {brandName}. Home service motor untuk kebutuhan servis rutin dan perawatan ringan.</p>
-            <p>Public website dirancang mobile-first dan tetap fokus ke konversi booking.</p>
+        <div
+            class="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-4 text-xs text-white/72 md:flex-row md:items-center md:justify-between md:px-6"
+        >
+            <p>
+                &copy; 2026 {brandName}. Home service motor untuk kebutuhan
+                servis rutin dan perawatan ringan.
+            </p>
+            <p>
+                Public website dirancang mobile-first dan tetap fokus ke
+                konversi booking.
+            </p>
         </div>
     </div>
 </footer>
