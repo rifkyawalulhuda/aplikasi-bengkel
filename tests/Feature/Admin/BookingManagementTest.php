@@ -89,11 +89,81 @@ test('authenticated admin can filter and search booking list', function () {
             ->where('filters.search', 'Rina')
             ->where('filters.status', BookingStatus::Confirmed->value)
             ->where('filters.date', today()->addDays(4)->toDateString())
+            ->where('filters.sort', 'service_date_asc')
             ->has('statusOptions', count(BookingStatus::cases()))
+            ->has('sortOptions')
             ->has('bookings.data', 1)
             ->where('bookings.data.0.bookingCode', $targetBooking->booking_code)
             ->where('bookings.data.0.customerName', 'Rina Lestari')
             ->where('bookings.data.0.status', BookingStatus::Confirmed->value));
+});
+
+test('authenticated admin can sort booking list by service date ascending', function () {
+    $user = User::factory()->create();
+    $this->actingAs($user);
+
+    $oldestBooking = createAdminBooking([
+        'booking_code' => 'ASM-SORT-0001',
+        'customer_name' => 'Booking Lama',
+        'service_date' => today()->addDays(1)->toDateString(),
+        'service_time' => '09:00',
+    ]);
+
+    $middleBooking = createAdminBooking([
+        'booking_code' => 'ASM-SORT-0002',
+        'customer_name' => 'Booking Tengah',
+        'service_date' => today()->addDays(3)->toDateString(),
+        'service_time' => '10:00',
+    ]);
+
+    $latestBooking = createAdminBooking([
+        'booking_code' => 'ASM-SORT-0003',
+        'customer_name' => 'Booking Baru',
+        'service_date' => today()->addDays(5)->toDateString(),
+        'service_time' => '11:00',
+    ]);
+
+    $this->get(route('admin.bookings.index', [
+        'sort' => 'service_date_asc',
+    ]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('admin/BookingsIndexPage')
+            ->where('filters.sort', 'service_date_asc')
+            ->where('bookings.data.0.bookingCode', $oldestBooking->booking_code)
+            ->where('bookings.data.1.bookingCode', $middleBooking->booking_code)
+            ->where('bookings.data.2.bookingCode', $latestBooking->booking_code));
+});
+
+test('authenticated admin can sort booking list by booking code ascending', function () {
+    $user = User::factory()->create();
+    $this->actingAs($user);
+
+    $firstBooking = createAdminBooking([
+        'booking_code' => 'ASM-SORT-A001',
+        'customer_name' => 'Booking Alpha',
+    ]);
+
+    $secondBooking = createAdminBooking([
+        'booking_code' => 'ASM-SORT-B001',
+        'customer_name' => 'Booking Beta',
+    ]);
+
+    $thirdBooking = createAdminBooking([
+        'booking_code' => 'ASM-SORT-C001',
+        'customer_name' => 'Booking Charlie',
+    ]);
+
+    $this->get(route('admin.bookings.index', [
+        'sort' => 'booking_code_asc',
+    ]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('admin/BookingsIndexPage')
+            ->where('filters.sort', 'booking_code_asc')
+            ->where('bookings.data.0.bookingCode', $firstBooking->booking_code)
+            ->where('bookings.data.1.bookingCode', $secondBooking->booking_code)
+            ->where('bookings.data.2.bookingCode', $thirdBooking->booking_code));
 });
 
 test('authenticated admin can view booking detail with status history', function () {

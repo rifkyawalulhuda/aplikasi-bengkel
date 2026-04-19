@@ -11,6 +11,7 @@ use App\Models\Booking;
 use App\Models\BookingStatusLog;
 use App\Support\Enums\BookingStatus;
 use App\Support\Enums\PackageType;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -22,13 +23,15 @@ class BookingManagementController extends Controller
     public function index(Request $request): Response
     {
         $status = BookingStatus::tryFrom((string) $request->string('status'));
+        $sort = $this->resolveSortOption((string) $request->string('sort'));
         $filters = [
             'search' => trim((string) $request->string('search')),
             'status' => $status?->value ?? '',
             'date' => trim((string) $request->string('date')),
+            'sort' => $sort,
         ];
 
-        $bookings = Booking::query()
+        $bookingsQuery = Booking::query()
             ->select([
                 'id',
                 'booking_code',
@@ -54,10 +57,11 @@ class BookingManagementController extends Controller
             })
             ->when($filters['date'] !== '', function ($query) use ($filters): void {
                 $query->whereDate('service_date', $filters['date']);
-            })
-            ->orderByDesc('service_date')
-            ->orderByDesc('service_time')
-            ->orderByDesc('id')
+            });
+
+        $this->applySort($bookingsQuery, $sort);
+
+        $bookings = $bookingsQuery
             ->paginate(12)
             ->withQueryString()
             ->through(fn (Booking $booking): array => [
@@ -79,6 +83,7 @@ class BookingManagementController extends Controller
             'bookings' => $bookings,
             'filters' => $filters,
             'statusOptions' => $this->statusOptions()->all(),
+            'sortOptions' => $this->sortOptions(),
         ]);
     }
 
@@ -211,6 +216,36 @@ class BookingManagementController extends Controller
         return 'https://www.google.com/maps?q='.$booking->latitude.','.$booking->longitude;
     }
 
+    private function applySort(Builder $query, string $sort): void
+    {
+        match ($sort) {
+            'booking_code_asc' => $query->orderBy('booking_code')->orderByDesc('service_date')->orderByDesc('id'),
+            'booking_code_desc' => $query->orderByDesc('booking_code')->orderByDesc('service_date')->orderByDesc('id'),
+            'service_date_asc' => $query->orderBy('service_date')->orderBy('service_time')->orderBy('id'),
+            'service_date_desc' => $query->orderByDesc('service_date')->orderByDesc('service_time')->orderByDesc('id'),
+            'service_time_asc' => $query->orderBy('service_time')->orderBy('service_date')->orderBy('id'),
+            'service_time_desc' => $query->orderByDesc('service_time')->orderByDesc('service_date')->orderByDesc('id'),
+            'customer_name_asc' => $query->orderBy('customer_name')->orderByDesc('service_date')->orderByDesc('id'),
+            'customer_name_desc' => $query->orderByDesc('customer_name')->orderByDesc('service_date')->orderByDesc('id'),
+            'total_price_asc' => $query->orderBy('total_price')->orderByDesc('service_date')->orderByDesc('id'),
+            'total_price_desc' => $query->orderByDesc('total_price')->orderByDesc('service_date')->orderByDesc('id'),
+            default => $query->orderByDesc('service_date')->orderByDesc('service_time')->orderByDesc('id'),
+        };
+    }
+
+    private function resolveSortOption(string $sort): string
+    {
+        $allowedSorts = collect($this->sortOptions())
+            ->pluck('value')
+            ->all();
+
+        if (in_array($sort, $allowedSorts, true)) {
+            return $sort;
+        }
+
+        return 'service_date_asc';
+    }
+
     private function packageTypeLabel(PackageType $packageType): string
     {
         return match ($packageType) {
@@ -241,5 +276,54 @@ class BookingManagementController extends Controller
                 'value' => $status->value,
                 'label' => $this->statusLabel($status),
             ]);
+    }
+
+    /**
+     * @return array<int, array{value: string, label: string}>
+     */
+    private function sortOptions(): array
+    {
+        return [
+            [
+                'value' => 'service_date_asc',
+                'label' => 'Tanggal servis terdekat',
+            ],
+            [
+                'value' => 'service_date_desc',
+                'label' => 'Tanggal servis terlama',
+            ],
+            [
+                'value' => 'service_time_asc',
+                'label' => 'Jam servis terawal',
+            ],
+            [
+                'value' => 'service_time_desc',
+                'label' => 'Jam servis terakhir',
+            ],
+            [
+                'value' => 'booking_code_asc',
+                'label' => 'Kode booking A-Z',
+            ],
+            [
+                'value' => 'booking_code_desc',
+                'label' => 'Kode booking Z-A',
+            ],
+            [
+                'value' => 'customer_name_asc',
+                'label' => 'Nama pelanggan A-Z',
+            ],
+            [
+                'value' => 'customer_name_desc',
+                'label' => 'Nama pelanggan Z-A',
+            ],
+            [
+                'value' => 'total_price_desc',
+                'label' => 'Total tertinggi',
+            ],
+            [
+                'value' => 'total_price_asc',
+                'label' => 'Total terendah',
+            ],
+        ];
     }
 }

@@ -157,6 +157,7 @@ export type AdminBookingListFilters = {
     search: string;
     status: string;
     date: string;
+    sort: string;
 };
 
 export type AdminBookingListItem = {
@@ -175,6 +176,11 @@ export type AdminBookingListItem = {
 };
 
 export type AdminBookingStatusOption = {
+    value: string;
+    label: string;
+};
+
+export type AdminBookingSortOption = {
     value: string;
     label: string;
 };

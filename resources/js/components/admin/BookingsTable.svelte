@@ -8,15 +8,103 @@
         CardHeader,
         CardTitle,
     } from '@/components/ui/card';
-    import { show } from '@/actions/App/Http/Controllers/Admin/BookingManagementController';
+    import {
+        index,
+        show,
+    } from '@/actions/App/Http/Controllers/Admin/BookingManagementController';
     import { formatCurrency } from '@/lib/utils';
-    import type { AdminBookingListItem, PaginationMeta } from '@/types';
+    import type {
+        AdminBookingListFilters,
+        AdminBookingListItem,
+        PaginationMeta,
+    } from '@/types';
 
     let {
         bookings,
+        filters,
     }: {
         bookings: PaginationMeta<AdminBookingListItem>;
+        filters: AdminBookingListFilters;
     } = $props();
+
+    const sortConfig = {
+        bookingCode: {
+            default: 'booking_code_desc',
+            asc: 'booking_code_asc',
+            desc: 'booking_code_desc',
+        },
+        customerName: {
+            default: 'customer_name_asc',
+            asc: 'customer_name_asc',
+            desc: 'customer_name_desc',
+        },
+        serviceDate: {
+            default: 'service_date_asc',
+            asc: 'service_date_asc',
+            desc: 'service_date_desc',
+        },
+        totalPrice: {
+            default: 'total_price_desc',
+            asc: 'total_price_asc',
+            desc: 'total_price_desc',
+        },
+    } as const;
+
+    function buildFiltersQuery(sort: string): string {
+        const params = new URLSearchParams();
+
+        if (filters.search.trim() !== '') {
+            params.set('search', filters.search.trim());
+        }
+
+        if (filters.status.trim() !== '') {
+            params.set('status', filters.status.trim());
+        }
+
+        if (filters.date.trim() !== '') {
+            params.set('date', filters.date.trim());
+        }
+
+        params.set('sort', sort);
+
+        const queryString = params.toString();
+
+        return queryString === ''
+            ? index().url
+            : `${index().url}?${queryString}`;
+    }
+
+    function sortHref(
+        currentSort: string,
+        defaultSort: string,
+        ascSort: string,
+        descSort: string,
+    ): string {
+        const nextSort =
+            currentSort === ascSort
+                ? descSort
+                : currentSort === descSort
+                  ? ascSort
+                  : defaultSort;
+
+        return buildFiltersQuery(nextSort);
+    }
+
+    function sortIndicator(
+        currentSort: string,
+        ascSort: string,
+        descSort: string,
+    ): string {
+        if (currentSort === ascSort) {
+            return '↑';
+        }
+
+        if (currentSort === descSort) {
+            return '↓';
+        }
+
+        return '↕';
+    }
 </script>
 
 <Card class="border-primary/16 bg-white/88 shadow-[0_24px_54px_-40px_rgb(var(--brand-primary-rgb)/0.36)] backdrop-blur-sm">
@@ -117,14 +205,93 @@
                 <table class="min-w-full text-sm">
                     <thead class="text-left text-muted-foreground">
                         <tr class="border-b border-border/70">
-                            <th class="px-3 py-3 font-medium">Kode</th>
-                            <th class="px-3 py-3 font-medium">Pelanggan</th>
+                            <th class="px-3 py-3 font-medium">
+                                <Link
+                                    href={sortHref(
+                                        filters.sort,
+                                        sortConfig.bookingCode.default,
+                                        sortConfig.bookingCode.asc,
+                                        sortConfig.bookingCode.desc,
+                                    )}
+                                    class="inline-flex items-center gap-1 rounded-md px-1 py-0.5 transition hover:text-foreground"
+                                    aria-label="Urutkan berdasarkan kode booking"
+                                >
+                                    Kode
+                                    <span class="text-xs">
+                                        {sortIndicator(
+                                            filters.sort,
+                                            sortConfig.bookingCode.asc,
+                                            sortConfig.bookingCode.desc,
+                                        )}
+                                    </span>
+                                </Link>
+                            </th>
+                            <th class="px-3 py-3 font-medium">
+                                <Link
+                                    href={sortHref(
+                                        filters.sort,
+                                        sortConfig.customerName.default,
+                                        sortConfig.customerName.asc,
+                                        sortConfig.customerName.desc,
+                                    )}
+                                    class="inline-flex items-center gap-1 rounded-md px-1 py-0.5 transition hover:text-foreground"
+                                    aria-label="Urutkan berdasarkan nama pelanggan"
+                                >
+                                    Pelanggan
+                                    <span class="text-xs">
+                                        {sortIndicator(
+                                            filters.sort,
+                                            sortConfig.customerName.asc,
+                                            sortConfig.customerName.desc,
+                                        )}
+                                    </span>
+                                </Link>
+                            </th>
                             <th class="px-3 py-3 font-medium">Layanan</th>
-                            <th class="px-3 py-3 font-medium">Jadwal</th>
+                            <th class="px-3 py-3 font-medium">
+                                <Link
+                                    href={sortHref(
+                                        filters.sort,
+                                        sortConfig.serviceDate.default,
+                                        sortConfig.serviceDate.asc,
+                                        sortConfig.serviceDate.desc,
+                                    )}
+                                    class="inline-flex items-center gap-1 rounded-md px-1 py-0.5 transition hover:text-foreground"
+                                    aria-label="Urutkan berdasarkan tanggal servis"
+                                >
+                                    Jadwal
+                                    <span class="text-xs">
+                                        {sortIndicator(
+                                            filters.sort,
+                                            sortConfig.serviceDate.asc,
+                                            sortConfig.serviceDate.desc,
+                                        )}
+                                    </span>
+                                </Link>
+                            </th>
                             <th class="px-3 py-3 font-medium">Status</th>
                             <th class="px-3 py-3 font-medium text-right"
-                                >Total</th
                             >
+                                <Link
+                                    href={sortHref(
+                                        filters.sort,
+                                        sortConfig.totalPrice.default,
+                                        sortConfig.totalPrice.asc,
+                                        sortConfig.totalPrice.desc,
+                                    )}
+                                    class="inline-flex items-center justify-end gap-1 rounded-md px-1 py-0.5 transition hover:text-foreground"
+                                    aria-label="Urutkan berdasarkan total harga"
+                                >
+                                    Total
+                                    <span class="text-xs">
+                                        {sortIndicator(
+                                            filters.sort,
+                                            sortConfig.totalPrice.asc,
+                                            sortConfig.totalPrice.desc,
+                                        )}
+                                    </span>
+                                </Link>
+                            </th>
                             <th class="px-3 py-3 font-medium text-right"
                                 >Aksi</th
                             >

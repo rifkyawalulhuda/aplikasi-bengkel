@@ -12,6 +12,7 @@
         AdminBookingListFilters,
         AdminBookingListItem,
         AdminBookingStatusOption,
+        AdminBookingSortOption,
         PaginationMeta,
     } from '@/types';
 
@@ -19,11 +20,35 @@
         bookings,
         filters,
         statusOptions,
+        sortOptions,
     }: {
         bookings: PaginationMeta<AdminBookingListItem>;
         filters: AdminBookingListFilters;
         statusOptions: AdminBookingStatusOption[];
+        sortOptions: AdminBookingSortOption[];
     } = $props();
+
+    let dateInput: HTMLInputElement | null = null;
+
+    function openDatePicker(): void {
+        if (!dateInput) {
+            return;
+        }
+
+        if (typeof dateInput.showPicker === 'function') {
+            dateInput.showPicker();
+            return;
+        }
+
+        dateInput.focus();
+    }
+
+    function handleDatePickerKeydown(event: KeyboardEvent): void {
+        if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            openDatePicker();
+        }
+    }
 </script>
 
 <AppHead title="Manajemen Booking" />
@@ -44,7 +69,7 @@
             <Form
                 action={index().url}
                 method="get"
-                class="grid gap-4 lg:grid-cols-[minmax(0,1.6fr)_0.8fr_0.8fr_auto_auto] lg:items-end"
+                class="grid gap-4 lg:grid-cols-[minmax(0,1.6fr)_0.8fr_0.8fr_0.9fr_auto_auto] lg:items-end"
             >
                 {#snippet children({ processing })}
                     <div class="grid gap-2">
@@ -76,14 +101,41 @@
                         </select>
                     </div>
 
-                    <div class="grid gap-2">
+                    <div
+                        class="grid gap-2"
+                        role="button"
+                        tabindex="0"
+                        aria-label="Buka pemilih tanggal servis"
+                        onclick={openDatePicker}
+                        onkeydown={handleDatePickerKeydown}
+                    >
                         <Label for="date">Tanggal servis</Label>
-                        <Input
+                        <input
                             id="date"
+                            bind:this={dateInput}
                             name="date"
                             type="date"
                             value={filters.date}
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                         />
+                    </div>
+
+                    <div class="grid gap-2">
+                        <Label for="sort">Urutkan</Label>
+                        <select
+                            id="sort"
+                            name="sort"
+                            class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none"
+                        >
+                            {#each sortOptions as option (option.value)}
+                                <option
+                                    value={option.value}
+                                    selected={filters.sort === option.value}
+                                >
+                                    {option.label}
+                                </option>
+                            {/each}
+                        </select>
                     </div>
 
                     <Button type="submit" disabled={processing}>
@@ -109,5 +161,5 @@
         </CardContent>
     </Card>
 
-    <BookingsTable {bookings} />
+    <BookingsTable {bookings} {filters} />
 </div>
