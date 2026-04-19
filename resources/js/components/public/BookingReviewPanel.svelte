@@ -45,7 +45,7 @@
             </Badge>
         </div>
         <p class="text-sm leading-6 text-muted-foreground">
-            Pastikan semua data sudah sesuai. Saat backend submit diaktifkan, ringkasan inilah yang akan menjadi payload dasar booking.
+            Pastikan semua data sudah sesuai.
         </p>
     </CardHeader>
 

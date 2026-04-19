@@ -485,6 +485,13 @@
     });
 
     function useDeviceLocation(): void {
+        if (!window.isSecureContext) {
+            locationFeedback =
+                'Lokasi perangkat hanya bisa dipakai lewat HTTPS atau localhost. Jika dibuka lewat HTTP/IP lokal, browser akan menolak.';
+            locationFeedbackTone = 'error';
+            return;
+        }
+
         if (!navigator.geolocation) {
             locationFeedback =
                 'Perangkat ini tidak mendukung pengambilan lokasi otomatis.';
@@ -515,7 +522,7 @@
 
                 if (error.code === 1) {
                     locationFeedback =
-                        'Akses lokasi ditolak. Silakan pilih titik secara manual di peta.';
+                        'Izin lokasi ditolak. Aktifkan izin lokasi di browser/HP lalu coba lagi.';
                 } else if (error.code === 3) {
                     locationFeedback =
                         'Permintaan lokasi perangkat terlalu lama. Coba lagi atau pilih titik manual.';

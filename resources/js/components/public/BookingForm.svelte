@@ -1,5 +1,6 @@
 <script lang="ts">
     import { router } from '@inertiajs/svelte';
+    import { tick } from 'svelte';
     import { store as storeBooking } from '@/actions/App/Http/Controllers/Public/BookingController';
     import { Badge } from '@/components/ui/badge';
     import { Button } from '@/components/ui/button';
@@ -63,6 +64,7 @@
     let submitTone = $state<'info' | 'error'>('info');
     let backendErrors = $state<Record<string, string>>({});
     let backendErrorSnapshot = $state('');
+    let bookingFormSection: HTMLElement | null = null;
 
     let packageType = $state<BookingPackageType>('fixed_package');
     let servicePackageId = $state<number | null>(null);
@@ -259,6 +261,12 @@
         { number: 4, title: 'Review' },
     ] as const;
 
+    const currentStepMeta = $derived(
+        steps.find((step) => step.number === currentStep) ?? steps[0],
+    );
+
+    const stepProgress = $derived((currentStep / steps.length) * 100);
+
     $effect(() => {
         const currentSnapshot = buildFormSnapshot();
 
@@ -288,6 +296,15 @@
         return Object.keys(stepErrors[step as 1 | 2 | 3] ?? {}).length > 0;
     }
 
+    async function scrollToBookingFormStart(): Promise<void> {
+        await tick();
+
+        bookingFormSection?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start',
+        });
+    }
+
     function canGoToNextStep(): boolean {
         if (currentStep === 1) return !stepHasErrors(1);
         if (currentStep === 2) return !stepHasErrors(2);
@@ -295,12 +312,16 @@
         return true;
     }
 
-    function goToNextStep() {
+    async function goToNextStep() {
         validationScope = Math.max(validationScope, currentStep);
         backendErrors = {};
         submitMessage = '';
-        if (!canGoToNextStep()) return;
+        if (!canGoToNextStep()) {
+            return;
+        }
+
         currentStep = Math.min(currentStep + 1, 4);
+        await scrollToBookingFormStart();
     }
 
     function goToPreviousStep() {
@@ -572,7 +593,8 @@
 
 <section
     id="booking-form"
-    class="bg-[#FFF078] pt-14 pb-32 md:pt-20 md:pb-32 xl:py-20"
+    bind:this={bookingFormSection}
+    class="scroll-mt-24 bg-[#FFF078] pt-14 pb-32 md:scroll-mt-28 md:pt-20 md:pb-32 xl:py-20"
 >
     <div class="mx-auto grid max-w-7xl gap-8 px-4 md:px-6 xl:grid-cols-[minmax(0,1fr)_24rem]">
         <div class="space-y-6">
@@ -586,7 +608,37 @@
                 descriptionStyle="color: #F45B26;"
             />
 
-            <div class="grid gap-3 sm:grid-cols-4">
+            <div class="rounded-[1.25rem] border border-border/70 bg-card/95 p-4 shadow-sm sm:hidden">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="space-y-1">
+                        <p class="text-xs uppercase tracking-[0.16em] text-muted-foreground">
+                            Step {currentStep} / {steps.length}
+                        </p>
+                        <p class="text-sm font-semibold text-foreground">
+                            {currentStepMeta.title}
+                        </p>
+                    </div>
+
+                    <Badge variant="secondary" class="rounded-full px-3 py-1 text-xs">
+                        {stepHasErrors(currentStep) && validationScope >= currentStep
+                            ? 'Perlu dilengkapi'
+                            : 'Siap lanjut'}
+                    </Badge>
+                </div>
+
+                <div class="mt-3 h-2 overflow-hidden rounded-full bg-muted">
+                    <div
+                        class="h-full rounded-full bg-primary transition-[width] duration-300"
+                        style={`width: ${stepProgress}%`}
+                    ></div>
+                </div>
+
+                <p class="mt-2 text-xs leading-5 text-muted-foreground">
+                    Fokus isi satu langkah dulu, lalu lanjut ke step berikutnya.
+                </p>
+            </div>
+
+            <div class="hidden gap-3 sm:grid sm:grid-cols-4">
                 {#each steps as step}
                     <button
                         type="button"
@@ -594,7 +646,7 @@
                             ? 'step'
                             : undefined}
                         aria-label={`Buka step ${step.number}: ${step.title}`}
-                            class={`rounded-[1.25rem] border px-4 py-3 text-left transition ${
+                        class={`rounded-[1.25rem] border px-4 py-3 text-left transition ${
                             currentStep === step.number
                                 ? 'border-primary/25 bg-primary/8 shadow-sm'
                                 : 'border-border/70 bg-card'
