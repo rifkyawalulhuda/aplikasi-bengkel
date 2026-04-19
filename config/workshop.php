@@ -3,8 +3,8 @@
 return [
     'brand_name' => env('APP_NAME', 'ASM MOTOR'),
     'tagline' => 'Servis ringan motor panggilan untuk matic, bebek, dan sport.',
-    'contact_phone' => env('WORKSHOP_CONTACT_PHONE', 'wa.me/6281385368629'),
-    'contact_whatsapp' => env('WORKSHOP_CONTACT_WHATSAPP', '6281200000000'),
+    'contact_phone' => env('WORKSHOP_CONTACT_PHONE', 'wa.me/6289502974497'),
+    'contact_whatsapp' => env('WORKSHOP_CONTACT_WHATSAPP', 'wa.me/6289502974497'),
     'service_areas' => [
         'Karawang bagian barat',
         'karawang bagian timur',

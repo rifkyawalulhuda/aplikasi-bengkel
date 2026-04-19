@@ -70,8 +70,8 @@
                 </p>
                 <p class="mt-2 text-sm leading-6 text-muted-foreground">
                     {option.value === 'fixed_package'
-                        ? 'Pilih salah satu paket aktif dengan harga langsung terlihat.'
-                        : 'Pilih item custom dan lihat subtotal preview berubah real-time.'}
+                        ? 'Pilih salah satu paket aktif dengan harga.'
+                        : 'Pilih custom order.'}
                 </p>
             </button>
         {/each}
@@ -186,8 +186,8 @@
         class="rounded-[1.5rem] border border-dashed border-border/70 bg-background/80 p-4 text-sm leading-6 text-muted-foreground"
     >
         Harga yang tampil di sini adalah estimasi awal. Saat booking dikirim,
-        backend tetap akan mengecek ulang paket aktif, slot jadwal, dan total
-        harga snapshot.
+        Admin tetap akan mengecek ulang paket aktif, slot jadwal, dan total
+        harga.
     </div>
 
     {#if packageType === 'fixed_package' && selectedPackage}

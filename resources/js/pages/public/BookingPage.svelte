@@ -56,10 +56,10 @@
             </Badge>
             <div class="space-y-3">
                 <h1 class="text-balance text-4xl font-black tracking-[-0.04em] text-white md:text-6xl">
-                    Isi data booking servis motor di rumah dengan alur yang fokus dan jelas.
+                    Isi data booking servis motor di rumah.
                 </h1>
                 <p class="max-w-2xl text-pretty text-base leading-7 text-white/76 md:text-lg">
-                    Proses booking dipisahkan dari landing page supaya Anda bisa lebih tenang menyelesaikan 4 langkah: pilih paket, isi data pelanggan dan motor, tentukan lokasi dan jadwal, lalu review sebelum kirim.
+                    pilih paket, isi data pelanggan dan motor, tentukan lokasi dan jadwal, lalu review sebelum kirim.
                 </p>
             </div>
         </div>

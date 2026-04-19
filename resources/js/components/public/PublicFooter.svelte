@@ -111,7 +111,7 @@
                 Kontak
             </p>
             <p class="text-sm leading-7 text-white/84">
-                Area layanan awal: {serviceAreas.join(', ')}
+                Area layanan : {serviceAreas.join(', ')}
             </p>
             <a
                 href={whatsappUrl}

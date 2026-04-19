@@ -206,9 +206,6 @@
                 Frontend preview
             </Badge>
         </div>
-        <p class="text-sm leading-6 text-muted-foreground">
-            Backend tetap menjadi sumber kebenaran untuk harga final, validasi slot, dan status coverage.
-        </p>
     </CardHeader>
 
     <CardContent class="space-y-4 text-sm">

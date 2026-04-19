@@ -23,14 +23,14 @@
 
 <div class="flex flex-col gap-6">
     <div class="flex flex-col gap-2">
-        <h2 class="text-2xl font-semibold tracking-tight text-[#D12052]">Masuk ke dashboard admin</h2>
-        <p class="text-sm leading-6 text-[#D12052]">
+        <h2 class="text-2xl font-semibold tracking-tight text-foreground">Masuk ke dashboard admin</h2>
+        <p class="text-sm leading-6 text-muted-foreground">
             Gunakan akun admin untuk mengakses booking, paket servis, item custom, dan visitor analytics.
         </p>
     </div>
 
     {#if status}
-        <div class="rounded-xl border border-primary/18 bg-primary/8 px-4 py-3 text-sm text-foreground">
+        <div class="rounded-xl border border-border/70 bg-muted px-4 py-3 text-sm text-foreground">
             {status}
         </div>
     {/if}
@@ -47,6 +47,7 @@
                         required
                         autocomplete="email"
                         placeholder="admin@bengkel.test"
+                        class="text-black caret-black selection:bg-slate-200 selection:text-black"
                     />
                     <InputError message={errors.email} />
                 </div>
@@ -66,6 +67,7 @@
                         required
                         autocomplete="current-password"
                         placeholder="Password"
+                        class="text-black caret-black selection:bg-slate-200 selection:text-black"
                     />
                     <InputError message={errors.password} />
                 </div>
