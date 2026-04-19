@@ -614,18 +614,9 @@
             >
                 <p class="font-semibold text-foreground">Panduan singkat</p>
                 <ul class="mt-2 space-y-2">
-                    <li>
-                        Validation berjalan per step dan ikut diperbarui saat
-                        data berubah.
-                    </li>
-                    <li>
-                        Harga pada sisi kanan membantu melihat estimasi sebelum
-                        booking dikirim.
-                    </li>
-                    <li>
-                        Backend tetap akan memvalidasi ulang slot, paket aktif,
-                        item custom, dan snapshot harga saat submit.
-                    </li>
+                    <li>Isi form bertahap dari atas ke bawah.</li>
+                    <li>Lihat estimasi harga di panel kanan.</li>
+                    <li>Data tetap dicek ulang saat booking dikirim.</li>
                 </ul>
             </div>
         </div>
