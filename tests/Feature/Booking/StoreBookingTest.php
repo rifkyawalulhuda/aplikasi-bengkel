@@ -300,7 +300,7 @@ test('slot availability is validated on the backend', function () {
 
     foreach (range(1, (int) config('booking.max_per_slot')) as $index) {
         Booking::query()->create([
-            'booking_code' => 'BMS-TEST-000'.$index,
+            'booking_code' => 'ASM-TEST-000'.$index,
             'customer_name' => 'Customer '.$index,
             'customer_email' => 'customer'.$index.'@example.com',
             'customer_phone' => '08123456789'.$index,

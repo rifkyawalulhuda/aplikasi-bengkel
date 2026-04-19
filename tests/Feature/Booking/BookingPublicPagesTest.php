@@ -55,7 +55,7 @@ function createLandingCustomServiceItem(array $overrides = []): CustomServiceIte
 function createPublicBooking(array $overrides = []): Booking
 {
     return Booking::query()->create(array_merge([
-        'booking_code' => 'BMS-20260414-0001',
+        'booking_code' => 'ASM-20260414-0001',
         'customer_name' => 'Rifky',
         'customer_email' => 'rifky@example.com',
         'customer_phone' => '081234567890',
@@ -192,7 +192,7 @@ test('booking page ignores invalid package prefill safely', function () {
 
 test('booking success page renders reassuring public-safe booking details', function () {
     $booking = createPublicBooking([
-        'booking_code' => 'BMS-20260414-0042',
+        'booking_code' => 'ASM-20260414-0042',
         'status' => BookingStatus::Confirmed,
         'service_date' => '2026-04-20',
         'service_time' => '14:00',
@@ -216,7 +216,7 @@ test('booking success page renders reassuring public-safe booking details', func
 
 test('public booking summary only exposes safe summary fields', function () {
     $booking = createPublicBooking([
-        'booking_code' => 'BMS-20260414-0043',
+        'booking_code' => 'ASM-20260414-0043',
         'service_date' => '2026-04-21',
         'total_price' => 155000,
     ]);

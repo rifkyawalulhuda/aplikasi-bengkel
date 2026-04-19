@@ -16,7 +16,7 @@ function createDashboardBooking(array $overrides = []): Booking
     unset($overrides['created_at'], $overrides['updated_at']);
 
     $booking = Booking::query()->create(array_merge([
-        'booking_code' => sprintf('BMS-DASH-%04d', $sequence),
+        'booking_code' => sprintf('ASM-DASH-%04d', $sequence),
         'customer_name' => 'Dashboard Tester '.$sequence,
         'customer_email' => 'dashboard'.$sequence.'@example.com',
         'customer_phone' => '0812000000'.$sequence,

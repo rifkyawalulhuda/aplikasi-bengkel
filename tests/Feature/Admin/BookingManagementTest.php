@@ -12,7 +12,7 @@ function createAdminBooking(array $overrides = []): Booking
     static $sequence = 1;
 
     $booking = Booking::query()->create(array_merge([
-        'booking_code' => sprintf('BMS-ADMIN-%04d', $sequence),
+        'booking_code' => sprintf('ASM-ADMIN-%04d', $sequence),
         'customer_name' => 'Customer Admin '.$sequence,
         'customer_email' => 'customer-admin-'.$sequence.'@example.com',
         'customer_phone' => '081230000'.str_pad((string) $sequence, 3, '0', STR_PAD_LEFT),
@@ -56,7 +56,7 @@ test('authenticated admin can filter and search booking list', function () {
     $this->actingAs($user);
 
     $targetBooking = createAdminBooking([
-        'booking_code' => 'BMS-ADMIN-TARGET',
+        'booking_code' => 'ASM-ADMIN-TARGET',
         'customer_name' => 'Rina Lestari',
         'customer_phone' => '081234567890',
         'status' => BookingStatus::Confirmed,
@@ -65,14 +65,14 @@ test('authenticated admin can filter and search booking list', function () {
     ]);
 
     createAdminBooking([
-        'booking_code' => 'BMS-ADMIN-OTHER',
+        'booking_code' => 'ASM-ADMIN-OTHER',
         'customer_name' => 'Budi Santoso',
         'status' => BookingStatus::Pending,
         'service_date' => today()->addDays(4)->toDateString(),
     ]);
 
     createAdminBooking([
-        'booking_code' => 'BMS-ADMIN-OLD',
+        'booking_code' => 'ASM-ADMIN-OLD',
         'customer_name' => 'Rina Lama',
         'status' => BookingStatus::Confirmed,
         'service_date' => today()->addDays(1)->toDateString(),
@@ -101,7 +101,7 @@ test('authenticated admin can view booking detail with status history', function
     $this->actingAs($user);
 
     $booking = createAdminBooking([
-        'booking_code' => 'BMS-DETAIL-0001',
+        'booking_code' => 'ASM-DETAIL-0001',
         'package_type' => 'custom_package',
         'package_name_snapshot' => 'Paket Custom',
         'package_price_snapshot' => 0,

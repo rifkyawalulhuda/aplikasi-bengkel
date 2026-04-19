@@ -81,24 +81,6 @@
             : '',
     );
 
-    $effect(() => {
-        if (addressSearchTimeout) {
-            clearTimeout(addressSearchTimeout);
-            addressSearchTimeout = null;
-        }
-
-        addressSearchTimeout = setTimeout(() => {
-            void searchAddressSuggestions(location.addressText);
-        }, 350);
-
-        return () => {
-            if (addressSearchTimeout) {
-                clearTimeout(addressSearchTimeout);
-                addressSearchTimeout = null;
-            }
-        };
-    });
-
     function formatCoordinate(value: number): string {
         return value.toFixed(6);
     }
@@ -285,7 +267,7 @@
     }
 
     function selectAddressSuggestion(suggestion: AddressSuggestion): void {
-        selectedAddressLabel = suggestion.displayName;
+        selectedAddressLabel = suggestion.shortLabel;
         addressSuggestions = [];
         addressSearchMessage = '';
         location.addressText = suggestion.shortLabel;
@@ -294,6 +276,82 @@
             suggestion.longitude,
             'Alamat dipilih dari saran alamat dan pin sudah dipindahkan.',
         );
+    }
+
+    async function autofillAddressFromInput(): Promise<void> {
+        const normalizedQuery = location.addressText.trim();
+
+        if (normalizedQuery.length < 3) {
+            return;
+        }
+
+        if (normalizedQuery === selectedAddressLabel) {
+            return;
+        }
+
+        try {
+            const response = await fetch(
+                `https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=1&countrycodes=id&q=${encodeURIComponent(normalizedQuery)}`,
+                {
+                    headers: {
+                        Accept: 'application/json',
+                    },
+                },
+            );
+
+            if (!response.ok) {
+                return;
+            }
+
+            const results = (await response.json()) as Array<{
+                display_name?: string;
+                lat?: string;
+                lon?: string;
+                category?: string;
+                address?: Record<string, string | undefined>;
+            }>;
+
+            const firstResult = results.at(0);
+
+            if (
+                !firstResult?.display_name ||
+                !firstResult.lat ||
+                !firstResult.lon
+            ) {
+                return;
+            }
+
+            const latitude = Number(firstResult.lat);
+            const longitude = Number(firstResult.lon);
+
+            if (
+                Number.isNaN(latitude) ||
+                Number.isNaN(longitude) ||
+                latitude < -90 ||
+                latitude > 90 ||
+                longitude < -180 ||
+                longitude > 180
+            ) {
+                return;
+            }
+
+            const resolvedSuggestion: AddressSuggestion = {
+                displayName: firstResult.display_name,
+                shortLabel: buildAddressLabel(
+                    firstResult.address,
+                    firstResult.display_name,
+                ),
+                latitude,
+                longitude,
+                category: firstResult.category ?? null,
+            };
+
+            selectAddressSuggestion(resolvedSuggestion);
+            addressSearchMessage =
+                'Alamat dilengkapi otomatis dari teks yang kamu masukkan.';
+        } catch {
+            // Keep manual input available if geocoding fails.
+        }
     }
 
     async function searchAddressSuggestions(query: string): Promise<void> {
@@ -383,6 +441,48 @@
             }
         }
     }
+
+    function scheduleAddressSuggestionSearch(query: string): void {
+        if (addressSearchTimeout) {
+            clearTimeout(addressSearchTimeout);
+        }
+
+        addressSearchTimeout = setTimeout(() => {
+            void searchAddressSuggestions(query);
+        }, 350);
+    }
+
+    $effect(() => {
+        const query = location.addressText.trim();
+
+        if (addressSearchTimeout) {
+            clearTimeout(addressSearchTimeout);
+            addressSearchTimeout = null;
+        }
+
+        if (query.length === 0) {
+            addressSuggestions = [];
+            addressSearchMessage = '';
+            isSearchingAddress = false;
+            return;
+        }
+
+        if (query === selectedAddressLabel) {
+            addressSuggestions = [];
+            addressSearchMessage = 'Alamat sudah dipilih dari saran.';
+            isSearchingAddress = false;
+            return;
+        }
+
+        if (query.length < 3) {
+            addressSuggestions = [];
+            addressSearchMessage = 'Ketik minimal 3 karakter untuk mencari alamat.';
+            isSearchingAddress = false;
+            return;
+        }
+
+        scheduleAddressSuggestionSearch(query);
+    });
 
     function useDeviceLocation(): void {
         if (!navigator.geolocation) {
@@ -645,6 +745,13 @@
                     autocomplete="off"
                     inputmode="text"
                     placeholder="Ketik alamat lengkap atau nama jalan"
+                    onblur={() => void autofillAddressFromInput()}
+                    onkeydown={(event) => {
+                        if (event.key === 'Enter') {
+                            event.preventDefault();
+                            void autofillAddressFromInput();
+                        }
+                    }}
                 />
 
                 {#if isSearchingAddress || addressSearchMessage}
@@ -664,9 +771,9 @@
                             <button
                                 type="button"
                                 role="option"
-                                aria-selected={location.addressText === suggestion.displayName}
+                                aria-selected={selectedAddressLabel === suggestion.shortLabel}
                                 class={`flex w-full flex-col gap-1 border-b border-border/60 px-4 py-3 text-left transition last:border-b-0 hover:bg-muted/80 ${
-                                    location.addressText === suggestion.displayName
+                                    selectedAddressLabel === suggestion.shortLabel
                                         ? 'bg-primary/8'
                                         : ''
                                 }`}

@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Mail;
 function createEmailBooking(array $overrides = []): Booking
 {
     return Booking::query()->create(array_merge([
-        'booking_code' => 'BMS-20260414-0099',
+        'booking_code' => 'ASM-20260414-0099',
         'customer_name' => 'Sinta Pratiwi',
         'customer_email' => 'sinta@example.com',
         'customer_phone' => '081298765432',
@@ -59,7 +59,7 @@ test('booking confirmation mail renders booking snapshot and admin contact infor
     $html = $mail->render();
 
     expect($html)->toContain('Sinta Pratiwi')
-        ->toContain('BMS-20260414-0099')
+        ->toContain('ASM-20260414-0099')
         ->toContain('Paket Custom')
         ->toContain('Ganti Oli')
         ->toContain('21 Apr 2026')
@@ -116,7 +116,7 @@ test('send booking confirmation email job logs the failed send attempt and does 
     Log::spy();
 
     $booking = createEmailBooking([
-        'booking_code' => 'BMS-20260414-0100',
+        'booking_code' => 'ASM-20260414-0100',
         'customer_email' => 'retry@example.com',
     ]);
 

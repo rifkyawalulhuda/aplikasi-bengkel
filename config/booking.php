@@ -3,7 +3,7 @@
 use App\Support\Enums\BookingStatus;
 
 return [
-    'code_prefix' => 'BMS',
+    'code_prefix' => 'ASM',
     'max_per_slot' => 3,
     'default_service_fee' => 0,
     'rate_limit' => [
