@@ -17,7 +17,38 @@
         packageCount: number;
     } = $props();
 
-    const workshop = $derived(page.props.workshop as { contactPhone: string });
+    const workshop = $derived(
+        page.props.workshop as {
+            contactPhone: string;
+            contactWhatsapp: string;
+        },
+    );
+
+    function extractDigits(value: string): string {
+        return value.replace(/\D/g, '');
+    }
+
+    function buildWhatsappUrl(value: string, fallback: string): string {
+        const digits = extractDigits(value || fallback);
+
+        if (digits === '') {
+            return '#';
+        }
+
+        const normalizedDigits = digits.startsWith('0')
+            ? `62${digits.slice(1)}`
+            : digits;
+
+        const message = encodeURIComponent(
+            'Halo admin, saya ingin bertanya tentang booking servis motor.',
+        );
+
+        return `https://wa.me/${normalizedDigits}?text=${message}`;
+    }
+
+    const whatsappUrl = $derived(
+        buildWhatsappUrl(workshop.contactWhatsapp, workshop.contactPhone),
+    );
 </script>
 
 <section id="booking-cta" class="bg-background">
@@ -81,7 +112,14 @@
                             class="h-12 rounded-full px-5 text-sm font-semibold text-white hover:bg-white/10 hover:text-white"
                         >
                             {#snippet children(props)}
-                                <a href={`tel:${workshop.contactPhone}`} {...props}>Hubungi Admin</a>
+                                <a
+                                    href={whatsappUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    {...props}
+                                >
+                                    Hubungi Admin
+                                </a>
                             {/snippet}
                         </Button>
                     </div>

@@ -135,12 +135,7 @@
             class="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-4 text-xs text-white/72 md:flex-row md:items-center md:justify-between md:px-6"
         >
             <p>
-                &copy; 2026 {brandName}. Home service motor untuk kebutuhan
-                servis rutin dan perawatan ringan.
-            </p>
-            <p>
-                Public website dirancang mobile-first dan tetap fokus ke
-                konversi booking.
+                &copy; 2026 {brandName}. Motor Karawang. All rights reserved.
             </p>
         </div>
     </div>

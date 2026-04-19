@@ -66,6 +66,13 @@ Dokumen ini tidak menggantikan PRD. Fungsinya adalah sebagai handoff praktis ten
   - accent `#F8DE22`
   - secondary `#F45B26`
   - strong `#D12052`
+- Kontak WhatsApp/telepon website sekarang sumber utamanya dari `.env` lewat `WORKSHOP_CONTACT_PHONE` dan `WORKSHOP_CONTACT_WHATSAPP`.
+- Tombol `Hubungi Admin` di landing page mengarah langsung ke WhatsApp admin.
+- Fitur email booking sudah dinonaktifkan sebagai default dan fokus operasional saat ini ada di WhatsApp.
+- Hero pembuka halaman booking sudah dihapus supaya user langsung masuk ke alur form booking.
+- Mobile booking flow sudah diringkas agar step overview tidak memakan ruang berlebih.
+- Step booking berikutnya otomatis scroll ke atas section supaya alur lebih nyaman di HP.
+- Sidebar/admin dashboard sempat dipoles ke tampilan default shadcn dan beberapa area sudah dikembalikan ke style library yang netral.
 
 ## 4. Route Penting yang Aktif Sekarang
 
@@ -145,6 +152,8 @@ php artisan db:seed --class=AdminSeeder
 - `resources/js/components/public/PublicFooter.svelte`
 - `resources/js/components/public/BookingForm.svelte`
 - `resources/js/components/public/BookingPriceSummary.svelte`
+- `resources/js/components/public/BookingCtaSection.svelte`
+- `resources/js/components/public/BookingLocationPicker.svelte`
 
 ### Public backend
 
@@ -163,6 +172,7 @@ php artisan db:seed --class=AdminSeeder
 - `resources/js/pages/admin/VisitorsPage.svelte`
 - `resources/js/components/admin/AdminSidebar.svelte`
 - `resources/js/components/admin/AdminHeader.svelte`
+- `resources/js/components/admin/BookingsTable.svelte`
 
 ### Admin backend
 
@@ -198,10 +208,14 @@ Saat melanjutkan pengembangan, jangan rusak aturan ini:
 - hero memakai gambar utama yang sudah beberapa kali diganti sesuai file lampiran user
 - footer memakai warna brand primary
 - nomor telepon di footer tetap tampil sebagai teks nomor, tetapi klik mengarah ke WhatsApp
+- tombol `Hubungi Admin` di landing page juga mengarah ke WhatsApp admin
 - booking mobile price preview sudah dibuat lebih ringkas/interaktif
+- booking mobile step overview dibuat compact supaya ruang form lebih lega
+- alamat booking memakai peta OpenStreetMap/Leaflet dengan pin, suggestion alamat, dan geocoding/reverse geocoding
 - landing page package cards sekarang maksimal 3
 - badge featured package berasal dari admin
 - admin dashboard memakai palet brand yang sama, tetapi visualnya tetap lebih restrained daripada landing page
+- dashboard admin sempat diubah ke default template shadcn sebelum disesuaikan lagi
 
 ## 9. Konfigurasi Konten yang Mudah Diubah
 
@@ -223,6 +237,12 @@ Isi penting di sana:
 - FAQ
 - testimonials
 - CTA content
+
+Catatan terbaru:
+
+- field kontak sekarang dibaca dari `.env`
+- `WORKSHOP_CONTACT_PHONE` dan `WORKSHOP_CONTACT_WHATSAPP` harus diisi jika ingin semua link WA konsisten
+- tidak ada lagi nomor WhatsApp hardcoded sebagai fallback di UI publik
 
 Kalau user bertanya "di mana ubah teks ini?", sering kali jawabannya ada di:
 
@@ -298,6 +318,8 @@ vendor/bin/pint --dirty --format agent
 - `composer run dev` bisa gagal jika `php artisan serve` bentrok dengan port lokal. Untuk proyek ini lebih aman pakai Herd untuk web server, lalu jalankan Vite dan queue secara terpisah.
 - Jika muncul error Vite manifest, jalankan `npm run build` atau `npm run dev`.
 - Jika phpMyAdmin malah diarahkan ke Herd, cek routing/domain lokal di environment Windows dan Herd, bukan di kode aplikasi.
+- Kalau link WhatsApp tidak berubah, cek `.env` lalu jalankan `php artisan config:clear` dan `php artisan config:cache`.
+- Booking public saat ini memprioritaskan WhatsApp sebagai jalur konfirmasi, jadi jangan kaget bila email booking tidak aktif secara default.
 
 ## 13. Status Testing Terakhir yang Diketahui
 
@@ -306,6 +328,8 @@ Status terakhir yang sempat dijalankan:
 - `php artisan test --compact` -> lulus, dengan puluhan test pass dan beberapa skip environment/browser
 - `npm run build` -> lulus
 - test fitur `ServicePackageManagementTest` -> lulus
+- verifikasi browser publik untuk tombol WhatsApp landing page -> lulus
+- `npm run types:check` -> lulus setelah perubahan UI/booking terakhir
 
 Tetap jalankan ulang test yang relevan setelah perubahan baru.
 
