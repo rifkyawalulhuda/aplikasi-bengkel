@@ -10,7 +10,6 @@
     let {
         customer = $bindable<BookingCustomerForm>({
             name: '',
-            email: '',
             phone: '',
         }),
         motorcycle = $bindable<BookingMotorcycleForm>({
@@ -42,7 +41,7 @@
     </div>
 
     <div class="grid gap-4 md:grid-cols-2">
-        <div class="space-y-2 md:col-span-2">
+        <div class="space-y-2">
             <Label for="customer-name">Nama pelanggan</Label>
             <Input
                 id="customer-name"
@@ -54,23 +53,6 @@
             {#if errors.customer_name}
                 <p class="text-sm font-medium text-destructive">
                     {errors.customer_name}
-                </p>
-            {/if}
-        </div>
-
-        <div class="space-y-2">
-            <Label for="customer-email">Email</Label>
-            <Input
-                id="customer-email"
-                type="email"
-                bind:value={customer.email}
-                aria-invalid={Boolean(errors.customer_email)}
-                autocomplete="email"
-                placeholder="nama@email.com"
-            />
-            {#if errors.customer_email}
-                <p class="text-sm font-medium text-destructive">
-                    {errors.customer_email}
                 </p>
             {/if}
         </div>

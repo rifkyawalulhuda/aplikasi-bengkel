@@ -1,13 +1,13 @@
 <?php
 
-use App\Jobs\SendBookingConfirmationEmailJob;
+use App\Actions\Booking\CreateBookingAction;
 use App\Models\Booking;
 use App\Models\BookingCustomItem;
 use App\Models\BookingStatusLog;
 use App\Models\CustomServiceItem;
 use App\Models\ServicePackage;
-use App\Actions\Booking\CreateBookingAction;
 use App\Support\Enums\BookingStatus;
+use App\Support\Enums\PackageType;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Queue;
 
@@ -70,6 +70,7 @@ test('customer can create a fixed package booking with immutable snapshots and i
 
     $response = $this->post(route('bookings.store'), bookingPayload([
         'service_package_id' => $servicePackage->id,
+        'custom_items' => [],
     ]));
 
     $booking = Booking::query()->first();
@@ -96,9 +97,56 @@ test('customer can create a fixed package booking with immutable snapshots and i
         ->and($statusLog->new_status)->toBe(BookingStatus::Pending)
         ->and($statusLog->note)->toContain('Booking created by customer.');
 
-    Queue::assertPushed(SendBookingConfirmationEmailJob::class, function (SendBookingConfirmationEmailJob $job) use ($booking): bool {
-        return $job->bookingId === $booking->id;
-    });
+    Queue::assertNothingPushed();
+});
+
+test('customer can create a fixed package booking even when an empty custom items array is submitted', function () {
+    Queue::fake();
+
+    $servicePackage = createServicePackage();
+
+    $response = $this->post(route('bookings.store'), bookingPayload([
+        'service_package_id' => $servicePackage->id,
+        'custom_items' => [],
+    ]));
+
+    $booking = Booking::query()->first();
+
+    expect($booking)->not->toBeNull();
+
+    $response->assertRedirect(route('bookings.success', [
+        'code' => $booking->booking_code,
+    ], false));
+
+    expect($booking->package_type)->toBe(PackageType::FixedPackage)
+        ->and($booking->service_package_id)->toBe($servicePackage->id);
+
+    Queue::assertNothingPushed();
+});
+
+test('customer can create a booking without providing an email address', function () {
+    Queue::fake();
+
+    $servicePackage = createServicePackage();
+    $payload = bookingPayload([
+        'service_package_id' => $servicePackage->id,
+    ]);
+
+    unset($payload['customer_email']);
+
+    $response = $this->post(route('bookings.store'), $payload);
+
+    $booking = Booking::query()->first();
+
+    expect($booking)->not->toBeNull();
+
+    $response->assertRedirect(route('bookings.success', [
+        'code' => $booking->booking_code,
+    ], false));
+
+    expect($booking->customer_email)->toBe('');
+
+    Queue::assertNothingPushed();
 });
 
 test('customer can create a custom package booking and duplicate items are merged into snapshots', function () {
@@ -157,6 +205,8 @@ test('customer can create a custom package booking and duplicate items are merge
     expect($sparkPlugSnapshot)->not->toBeNull()
         ->and($sparkPlugSnapshot->qty)->toBe(1)
         ->and($sparkPlugSnapshot->subtotal)->toBe(20000);
+
+    Queue::assertNothingPushed();
 });
 
 test('booking outside automatic coverage is still created but marked for manual review', function () {
@@ -184,6 +234,8 @@ test('booking outside automatic coverage is still created but marked for manual 
     expect($statusLog)->not->toBeNull()
         ->and($statusLog->note)->toContain('Booking created by customer.')
         ->and($statusLog->note)->toContain('perlu review admin');
+
+    Queue::assertNothingPushed();
 });
 
 test('custom package requires at least one active item', function () {
@@ -287,6 +339,8 @@ test('slot availability is validated on the backend', function () {
     $response->assertRedirect(route('bookings.create'))
         ->assertSessionHasErrors(['service_time']);
     $this->assertDatabaseCount('bookings', (int) config('booking.max_per_slot'));
+
+    Queue::assertNothingPushed();
 });
 
 test('booking submission is rate limited with a helpful message', function () {
@@ -334,7 +388,7 @@ test('booking flow shows a generic message and logs the failure when creation cr
     $mock = Mockery::mock(CreateBookingAction::class);
     $mock->shouldReceive('handle')
         ->once()
-        ->andThrow(new \RuntimeException('Database offline'));
+        ->andThrow(new RuntimeException('Database offline'));
 
     $this->app->instance(CreateBookingAction::class, $mock);
 
@@ -357,7 +411,7 @@ test('booking flow shows a generic message and logs the failure when creation cr
         ->once()
         ->withArgs(function (string $message, array $context): bool {
             return $message === 'Public booking creation failed.'
-                && $context['exception'] === \RuntimeException::class
+                && $context['exception'] === RuntimeException::class
                 && $context['error'] === 'Database offline'
                 && $context['package_type'] === 'fixed_package';
         });

@@ -76,7 +76,6 @@
             <div class="space-y-2">
                 <p class="font-semibold text-foreground">Pelanggan</p>
                 <p class="text-muted-foreground">{customer.name || '-'}</p>
-                <p class="text-muted-foreground">{customer.email || '-'}</p>
                 <p class="text-muted-foreground">{customer.phone || '-'}</p>
             </div>
 

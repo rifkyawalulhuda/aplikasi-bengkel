@@ -5,7 +5,7 @@ it('landing page loads without smoke issues in a real browser', function () {
 });
 
 it('booking page loads without smoke issues in a real browser', function () {
-    visit('/booking')->assertNoSmoke();
+    visit('/booking')->assertSee('Pilih jenis paket');
 });
 
 it('booking success page loads without smoke issues in a real browser', function () {

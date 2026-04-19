@@ -62,13 +62,13 @@
     let submitMessage = $state('');
     let submitTone = $state<'info' | 'error'>('info');
     let backendErrors = $state<Record<string, string>>({});
+    let backendErrorSnapshot = $state('');
 
     let packageType = $state<BookingPackageType>('fixed_package');
     let servicePackageId = $state<number | null>(null);
     let selectedCustomItems = $state<BookingCustomItemSelection[]>([]);
     let customer = $state<BookingCustomerForm>({
         name: '',
-        email: '',
         phone: '',
     });
     let motorcycle = $state<BookingMotorcycleForm>({
@@ -192,13 +192,6 @@
         const errors: Record<string, string> = {};
         if (!customer.name.trim())
             errors.customer_name = 'Nama pelanggan wajib diisi.';
-        if (!customer.email.trim())
-            errors.customer_email = 'Email pelanggan wajib diisi.';
-        if (
-            customer.email.trim() &&
-            !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer.email)
-        )
-            errors.customer_email = 'Format email belum valid.';
         if (!customer.phone.trim())
             errors.customer_phone = 'Nomor telepon / WhatsApp wajib diisi.';
         if (!motorcycle.type.trim())
@@ -266,6 +259,31 @@
         { number: 4, title: 'Review' },
     ] as const;
 
+    $effect(() => {
+        const currentSnapshot = buildFormSnapshot();
+
+        if (Object.keys(backendErrors).length === 0) {
+            backendErrorSnapshot = currentSnapshot;
+            return;
+        }
+
+        if (backendErrorSnapshot === '') {
+            backendErrorSnapshot = currentSnapshot;
+            return;
+        }
+
+        if (currentSnapshot === backendErrorSnapshot) {
+            return;
+        }
+
+        backendErrors = {};
+        backendErrorSnapshot = currentSnapshot;
+
+        if (submitTone === 'error') {
+            submitMessage = '';
+        }
+    });
+
     function stepHasErrors(step: number): boolean {
         return Object.keys(stepErrors[step as 1 | 2 | 3] ?? {}).length > 0;
     }
@@ -296,12 +314,7 @@
             package_type: packageType,
             service_package_id:
                 packageType === 'fixed_package' ? servicePackageId : null,
-            custom_items: selectedCustomItems.map((item) => ({
-                id: item.id,
-                qty: item.qty,
-            })),
             customer_name: customer.name,
-            customer_email: customer.email,
             customer_phone: customer.phone,
             motorcycle_type: motorcycle.type,
             motorcycle_brand: motorcycle.brand,
@@ -315,7 +328,114 @@
             service_date: schedule.serviceDate,
             service_time: schedule.serviceTime,
             notes: schedule.notes || null,
+            ...(packageType === 'custom_package'
+                ? {
+                      custom_items: selectedCustomItems.map((item) => ({
+                          id: item.id,
+                          qty: item.qty,
+                      })),
+                  }
+                : {}),
         };
+    }
+
+    function buildFormSnapshot(): string {
+        return JSON.stringify({
+            packageType,
+            servicePackageId,
+            selectedCustomItems,
+            customer,
+            motorcycle,
+            location,
+            schedule,
+        });
+    }
+
+    function clearBackendErrors(): void {
+        backendErrors = {};
+        backendErrorSnapshot = buildFormSnapshot();
+
+        if (submitTone === 'error') {
+            submitMessage = '';
+        }
+    }
+
+    function shortenAddressLabel(value: string): string {
+        const trimmedValue = value.trim();
+
+        if (trimmedValue.length <= 255) {
+            return trimmedValue;
+        }
+
+        return `${trimmedValue.slice(0, 252).trimEnd()}...`;
+    }
+
+    async function ensureLocationCoordinates(): Promise<boolean> {
+        if (location.latitude.trim() && location.longitude.trim()) {
+            return true;
+        }
+
+        const query = location.addressText.trim();
+
+        if (query.length < 3) {
+            return false;
+        }
+
+        try {
+            const response = await fetch(
+                `https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=1&countrycodes=id&q=${encodeURIComponent(query)}`,
+                {
+                    headers: {
+                        Accept: 'application/json',
+                    },
+                },
+            );
+
+            if (!response.ok) {
+                return false;
+            }
+
+            const results = (await response.json()) as Array<{
+                display_name?: string;
+                lat?: string;
+                lon?: string;
+            }>;
+
+            const firstResult = results.at(0);
+
+            if (
+                !firstResult?.display_name ||
+                !firstResult.lat ||
+                !firstResult.lon
+            ) {
+                return false;
+            }
+
+            const latitude = Number(firstResult.lat);
+            const longitude = Number(firstResult.lon);
+
+            if (
+                Number.isNaN(latitude) ||
+                Number.isNaN(longitude) ||
+                latitude < -90 ||
+                latitude > 90 ||
+                longitude < -180 ||
+                longitude > 180
+            ) {
+                return false;
+            }
+
+            location.addressText = shortenAddressLabel(firstResult.display_name);
+            location.latitude = latitude.toFixed(6);
+            location.longitude = longitude.toFixed(6);
+            submitMessage =
+                'Koordinat lokasi berhasil dilengkapi otomatis dari alamat yang kamu ketik.';
+            submitTone = 'info';
+
+            return true;
+        } catch {
+            return false;
+        }
     }
 
     function currentStepForErrors(errors: Record<string, string>): number {
@@ -335,7 +455,6 @@
             errorKeys.some((key) =>
                 [
                     'customer_name',
-                    'customer_email',
                     'customer_phone',
                     'motorcycle_type',
                     'motorcycle_brand',
@@ -367,10 +486,61 @@
         return 4;
     }
 
-    function handleBookingSubmit() {
+    function firstBackendErrorMessage(errors: Record<string, string>): string {
+        if (errors.booking) {
+            return errors.booking;
+        }
+
+        const orderedKeys = [
+            'package_type',
+            'service_package_id',
+            'custom_items',
+            'customer_name',
+            'customer_phone',
+            'motorcycle_type',
+            'motorcycle_brand',
+            'motorcycle_model',
+            'motorcycle_year',
+            'plate_number',
+            'address_text',
+            'house_landmark',
+            'latitude',
+            'longitude',
+            'service_date',
+            'service_time',
+            'notes',
+        ];
+
+        const firstKey = orderedKeys.find((key) => errors[key]);
+
+        if (firstKey) {
+            return errors[firstKey];
+        }
+
+        const firstError = Object.values(errors).find((message) => message);
+
+        return (
+            firstError ??
+            'Periksa kembali data booking yang masih perlu diperbaiki.'
+        );
+    }
+
+    async function handleBookingSubmit() {
         validationScope = 3;
         backendErrors = {};
         submitMessage = '';
+
+        if (!(await ensureLocationCoordinates())) {
+            const coordinateErrors = locationScheduleErrors();
+
+            if (coordinateErrors.latitude || coordinateErrors.longitude) {
+                submitTone = 'error';
+                submitMessage =
+                    'Koordinat lokasi belum lengkap. Pilih titik di peta atau isi alamat yang bisa dicocokkan.';
+                currentStep = 3;
+                return;
+            }
+        }
 
         if (stepHasErrors(1) || stepHasErrors(2) || stepHasErrors(3)) {
             submitTone = 'error';
@@ -388,10 +558,9 @@
             preserveScroll: true,
             onError: (errors) => {
                 backendErrors = errors as Record<string, string>;
+                backendErrorSnapshot = buildFormSnapshot();
                 submitTone = 'error';
-                submitMessage =
-                    backendErrors.booking ??
-                    'Periksa kembali data booking yang masih perlu diperbaiki.';
+                submitMessage = firstBackendErrorMessage(backendErrors);
                 currentStep = currentStepForErrors(backendErrors);
             },
             onFinish: () => {
@@ -496,11 +665,13 @@
                             bind:servicePackageId
                             {packageTypes}
                             {packages}
+                            onSelectionChange={clearBackendErrors}
                             errors={visibleErrors}
                         />
                         <BookingCustomItemsSelector
                             bind:selectedItems={selectedCustomItems}
                             {customItems}
+                            onSelectionChange={clearBackendErrors}
                             visible={packageType === 'custom_package'}
                             errors={visibleErrors}
                         />

@@ -1,14 +1,23 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import 'leaflet/dist/leaflet.css';
-    import markerIcon2xUrl from 'leaflet/dist/images/marker-icon-2x.png?url';
-    import markerIconUrl from 'leaflet/dist/images/marker-icon.png?url';
-    import markerShadowUrl from 'leaflet/dist/images/marker-shadow.png?url';
-    import type { Map as LeafletMap, Marker as LeafletMarker } from 'leaflet';
+    import type {
+        DivIcon as LeafletDivIcon,
+        Map as LeafletMap,
+        Marker as LeafletMarker,
+    } from 'leaflet';
     import { Button } from '@/components/ui/button';
     import { Input } from '@/components/ui/input';
     import { Label } from '@/components/ui/label';
     import type { BookingLocationForm } from '@/types';
+
+    type AddressSuggestion = {
+        displayName: string;
+        shortLabel: string;
+        latitude: number;
+        longitude: number;
+        category: string | null;
+    };
 
     type LocationFeedbackTone = 'info' | 'success' | 'error';
 
@@ -35,8 +44,15 @@
     let marker = $state<LeafletMarker | null>(null);
     let leaflet = $state<typeof import('leaflet') | null>(null);
     let isRequestingLocation = $state(false);
+    let isSearchingAddress = $state(false);
+    let addressSearchMessage = $state('');
+    let addressSuggestions = $state<AddressSuggestion[]>([]);
     let locationFeedback = $state('');
     let locationFeedbackTone = $state<LocationFeedbackTone>('info');
+    let selectedAddressLabel = $state('');
+    let addressSearchAbortController: AbortController | null = null;
+    let reverseGeocodeAbortController: AbortController | null = null;
+    let addressSearchTimeout: ReturnType<typeof setTimeout> | null = null;
 
     const parsedCoordinates = $derived.by(() => {
         const latitude = Number(location.latitude);
@@ -65,8 +81,84 @@
             : '',
     );
 
+    $effect(() => {
+        if (addressSearchTimeout) {
+            clearTimeout(addressSearchTimeout);
+            addressSearchTimeout = null;
+        }
+
+        addressSearchTimeout = setTimeout(() => {
+            void searchAddressSuggestions(location.addressText);
+        }, 350);
+
+        return () => {
+            if (addressSearchTimeout) {
+                clearTimeout(addressSearchTimeout);
+                addressSearchTimeout = null;
+            }
+        };
+    });
+
     function formatCoordinate(value: number): string {
         return value.toFixed(6);
+    }
+
+    function buildCompactAddressLabel(parts: Array<string | null | undefined>): string {
+        return parts
+            .map((part) => part?.trim())
+            .filter((part): part is string => Boolean(part))
+            .filter((part, index, collection) => collection.indexOf(part) === index)
+            .join(', ');
+    }
+
+    function shortenAddressLabel(value: string): string {
+        const trimmedValue = value.trim();
+
+        if (trimmedValue.length <= 255) {
+            return trimmedValue;
+        }
+
+        return `${trimmedValue.slice(0, 252).trimEnd()}...`;
+    }
+
+    function buildAddressLabel(record: Record<string, string | undefined> | undefined, fallback: string): string {
+        const compactLabel = buildCompactAddressLabel([
+            record?.house_number,
+            record?.road,
+            record?.village,
+            record?.suburb,
+            record?.town,
+            record?.city,
+            record?.county,
+            record?.state,
+            record?.postcode,
+        ]);
+
+        if (compactLabel !== '') {
+            return shortenAddressLabel(compactLabel);
+        }
+
+        return shortenAddressLabel(fallback);
+    }
+
+    function createMarkerIcon(): LeafletDivIcon | null {
+        if (!leaflet) {
+            return null;
+        }
+
+        return leaflet.divIcon({
+            className: 'booking-location-marker',
+            html: `
+                <div class="booking-location-marker__pin" aria-hidden="true">
+                    <span class="booking-location-marker__ring"></span>
+                    <span class="booking-location-marker__body"></span>
+                    <span class="booking-location-marker__dot"></span>
+                </div>
+            `,
+            iconSize: [30, 44],
+            iconAnchor: [15, 42],
+            popupAnchor: [0, -38],
+        });
     }
 
     function setLocationCoordinates(
@@ -81,24 +173,215 @@
         locationFeedbackTone = tone;
     }
 
-    function syncMarkerPosition(latitude: number, longitude: number): void {
+    function syncMarkerPosition(
+        latitude: number,
+        longitude: number,
+        animate = true,
+    ): void {
         if (!map || !marker) {
             return;
         }
 
         marker.setLatLng([latitude, longitude]);
-        map.setView([latitude, longitude], Math.max(map.getZoom(), 16), {
-            animate: true,
+
+        const nextZoom = Math.max(map.getZoom(), 16);
+
+        if (animate) {
+            map.flyTo([latitude, longitude], nextZoom, {
+                animate: true,
+                duration: 0.75,
+            });
+
+            return;
+        }
+
+        map.setView([latitude, longitude], nextZoom, {
+            animate: false,
         });
     }
 
+    function moveToCoordinates(
+        latitude: number,
+        longitude: number,
+        feedback: string,
+        tone: LocationFeedbackTone = 'success',
+    ): void {
+        setLocationCoordinates(latitude, longitude, feedback, tone);
+        syncMarkerPosition(latitude, longitude);
+    }
+
+    async function reverseGeocodeCoordinates(
+        latitude: number,
+        longitude: number,
+    ): Promise<void> {
+        reverseGeocodeAbortController?.abort();
+
+        const controller = new AbortController();
+        reverseGeocodeAbortController = controller;
+
+        try {
+            const response = await fetch(
+                `https://nominatim.openstreetmap.org/reverse?format=jsonv2&addressdetails=1&lat=${latitude}&lon=${longitude}&zoom=18&accept-language=id`,
+                {
+                    headers: {
+                        Accept: 'application/json',
+                    },
+                    signal: controller.signal,
+                },
+            );
+
+            if (!response.ok) {
+                throw new Error(
+                    `Reverse geocoding request failed with status ${response.status}`,
+                );
+            }
+
+            const result = (await response.json()) as {
+                display_name?: string;
+                name?: string;
+                address?: Record<string, string | undefined>;
+            };
+
+            const resolvedAddress = buildAddressLabel(
+                result.address,
+                result.display_name?.trim() || result.name?.trim() || '',
+            );
+
+            if (!resolvedAddress) {
+                locationFeedback =
+                    'Titik lokasi dipindahkan, tetapi alamat belum ditemukan otomatis.';
+                locationFeedbackTone = 'info';
+                return;
+            }
+
+            location.addressText = resolvedAddress;
+            selectedAddressLabel = resolvedAddress;
+            addressSuggestions = [];
+            addressSearchMessage =
+                'Alamat otomatis diisi dari titik lokasi yang dipilih.';
+            locationFeedback = 'Alamat berhasil diisi otomatis dari peta.';
+            locationFeedbackTone = 'success';
+        } catch (error) {
+            if (error instanceof DOMException && error.name === 'AbortError') {
+                return;
+            }
+
+            locationFeedback =
+                'Titik lokasi tersimpan, tetapi alamat otomatis belum berhasil diambil.';
+            locationFeedbackTone = 'error';
+        }
+    }
+
     function handleMapClick(latitude: number, longitude: number): void {
-        setLocationCoordinates(
+        selectedAddressLabel = '';
+        addressSuggestions = [];
+        addressSearchMessage = '';
+        moveToCoordinates(
             latitude,
             longitude,
             'Titik lokasi berhasil dipilih dari peta.',
         );
-        syncMarkerPosition(latitude, longitude);
+        void reverseGeocodeCoordinates(latitude, longitude);
+    }
+
+    function selectAddressSuggestion(suggestion: AddressSuggestion): void {
+        selectedAddressLabel = suggestion.displayName;
+        addressSuggestions = [];
+        addressSearchMessage = '';
+        location.addressText = suggestion.shortLabel;
+        moveToCoordinates(
+            suggestion.latitude,
+            suggestion.longitude,
+            'Alamat dipilih dari saran alamat dan pin sudah dipindahkan.',
+        );
+    }
+
+    async function searchAddressSuggestions(query: string): Promise<void> {
+        const normalizedQuery = query.trim();
+
+        if (normalizedQuery.length < 3) {
+            addressSuggestions = [];
+            addressSearchMessage =
+                normalizedQuery.length === 0
+                    ? ''
+                    : 'Ketik minimal 3 karakter untuk mencari alamat.';
+            isSearchingAddress = false;
+
+            return;
+        }
+
+        if (normalizedQuery === selectedAddressLabel) {
+            addressSearchMessage = 'Alamat sudah dipilih dari saran.';
+            addressSuggestions = [];
+            isSearchingAddress = false;
+
+            return;
+        }
+
+        addressSearchAbortController?.abort();
+
+        const controller = new AbortController();
+        addressSearchAbortController = controller;
+        isSearchingAddress = true;
+        addressSearchMessage = 'Mencari saran alamat...';
+
+        try {
+            const response = await fetch(
+                `https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=5&countrycodes=id&q=${encodeURIComponent(normalizedQuery)}`,
+                {
+                    headers: {
+                        Accept: 'application/json',
+                    },
+                    signal: controller.signal,
+                },
+            );
+
+            if (!response.ok) {
+                throw new Error(`Geocoding request failed with status ${response.status}`);
+            }
+
+            const results = (await response.json()) as Array<{
+                display_name?: string;
+                lat?: string;
+                lon?: string;
+                category?: string;
+                address?: Record<string, string | undefined>;
+            }>;
+
+            addressSuggestions = results
+                .map((result) => ({
+                    displayName: result.display_name ?? '',
+                    shortLabel: buildAddressLabel(result.address, result.display_name ?? ''),
+                    latitude: Number(result.lat),
+                    longitude: Number(result.lon),
+                    category: result.category ?? null,
+                }))
+                .filter(
+                    (result): result is AddressSuggestion =>
+                        result.displayName !== '' &&
+                        result.shortLabel !== '' &&
+                        Number.isFinite(result.latitude) &&
+                        Number.isFinite(result.longitude),
+                );
+
+            addressSearchMessage = addressSuggestions.length
+                ? 'Pilih salah satu saran alamat untuk memindahkan pin.'
+                : 'Tidak ada saran alamat yang cocok.';
+        } catch (error) {
+            if (error instanceof DOMException && error.name === 'AbortError') {
+                return;
+            }
+
+            addressSuggestions = [];
+            addressSearchMessage =
+                'Pencarian alamat gagal. Silakan pilih titik di peta atau coba lagi.';
+            locationFeedbackTone = 'error';
+            locationFeedback = addressSearchMessage;
+        } finally {
+            if (addressSearchAbortController === controller) {
+                isSearchingAddress = false;
+            }
+        }
     }
 
     function useDeviceLocation(): void {
@@ -125,6 +408,7 @@
                     'Lokasi perangkat berhasil digunakan.',
                 );
                 syncMarkerPosition(latitude, longitude);
+                void reverseGeocodeCoordinates(latitude, longitude);
             },
             (error) => {
                 isRequestingLocation = false;
@@ -162,12 +446,6 @@
 
             leaflet = importedLeaflet;
 
-            leaflet.Icon.Default.mergeOptions({
-                iconRetinaUrl: markerIcon2xUrl,
-                iconUrl: markerIconUrl,
-                shadowUrl: markerShadowUrl,
-            });
-
             if (!mapContainer) {
                 return;
             }
@@ -176,16 +454,20 @@
 
             map = leaflet.map(mapContainer, {
                 scrollWheelZoom: false,
+                zoomAnimation: true,
+                fadeAnimation: true,
+                markerZoomAnimation: true,
             }).setView(
                 [initialCoordinates.latitude, initialCoordinates.longitude],
                 15,
             );
 
             leaflet
-                .tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                .tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     attribution:
                         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
                     maxZoom: 19,
+                    crossOrigin: true,
                 })
                 .addTo(map);
 
@@ -195,6 +477,7 @@
                     initialCoordinates.longitude,
                 ], {
                     draggable: true,
+                    icon: createMarkerIcon() ?? undefined,
                 })
                 .addTo(map);
 
@@ -209,11 +492,15 @@
                     return;
                 }
 
-                setLocationCoordinates(
+                selectedAddressLabel = '';
+                addressSuggestions = [];
+                addressSearchMessage = '';
+                moveToCoordinates(
                     latLng.lat,
                     latLng.lng,
                     'Titik lokasi disesuaikan dari marker peta.',
                 );
+                void reverseGeocodeCoordinates(latLng.lat, latLng.lng);
             });
 
             map.whenReady(() => {
@@ -225,6 +512,12 @@
 
         return () => {
             cancelled = true;
+            if (addressSearchTimeout) {
+                clearTimeout(addressSearchTimeout);
+                addressSearchTimeout = null;
+            }
+            addressSearchAbortController?.abort();
+            reverseGeocodeAbortController?.abort();
             map?.remove();
             map = null;
             marker = null;
@@ -252,11 +545,12 @@
             parsedCoordinates.latitude,
             parsedCoordinates.longitude,
         ]);
-        map.setView(
+        map.flyTo(
             [parsedCoordinates.latitude, parsedCoordinates.longitude],
             Math.max(map.getZoom(), 16),
             {
                 animate: true,
+                duration: 0.75,
             },
         );
     });
@@ -266,8 +560,8 @@
     <div class="space-y-2">
         <h3 class="text-lg font-semibold text-foreground">3. Lokasi servis</h3>
         <p class="text-sm leading-6 text-muted-foreground">
-            Pilih titik lokasi langsung di peta, atau gunakan lokasi perangkat
-            untuk mengisi koordinat dengan lebih cepat.
+            Ketik alamat untuk melihat saran lokasi, pilih titik di peta, atau
+            gunakan lokasi perangkat untuk mengisi koordinat dengan lebih cepat.
         </p>
     </div>
 
@@ -343,14 +637,61 @@
     <div class="grid gap-4">
         <div class="space-y-2">
             <Label for="address-text">Alamat lengkap</Label>
-            <textarea
-                id="address-text"
-                bind:value={location.addressText}
-                aria-invalid={Boolean(errors.address_text)}
-                rows="4"
-                class="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                placeholder="Contoh: Jl. Mawar No. 10, RT 03 / RW 05, Kel. Sukamaju, Kec. Bogor Tengah"
-            ></textarea>
+            <div class="space-y-2">
+                <Input
+                    id="address-text"
+                    bind:value={location.addressText}
+                    aria-invalid={Boolean(errors.address_text)}
+                    autocomplete="off"
+                    inputmode="text"
+                    placeholder="Ketik alamat lengkap atau nama jalan"
+                />
+
+                {#if isSearchingAddress || addressSearchMessage}
+                    <p class="text-sm leading-6 text-muted-foreground">
+                        {addressSearchMessage ||
+                            'Ketik minimal 3 karakter untuk mulai mencari alamat.'}
+                    </p>
+                {/if}
+
+                {#if addressSuggestions.length > 0}
+                    <div
+                        role="listbox"
+                        aria-label="Saran alamat"
+                        class="max-h-64 overflow-auto rounded-[1.25rem] border border-border/70 bg-card shadow-sm"
+                    >
+                        {#each addressSuggestions as suggestion, index (suggestion.displayName)}
+                            <button
+                                type="button"
+                                role="option"
+                                aria-selected={location.addressText === suggestion.displayName}
+                                class={`flex w-full flex-col gap-1 border-b border-border/60 px-4 py-3 text-left transition last:border-b-0 hover:bg-muted/80 ${
+                                    location.addressText === suggestion.displayName
+                                        ? 'bg-primary/8'
+                                        : ''
+                                }`}
+                                onclick={() => selectAddressSuggestion(suggestion)}
+                            >
+                                <span class="text-sm font-medium text-foreground">
+                                    {suggestion.displayName}
+                                </span>
+                                <span class="text-xs uppercase tracking-[0.16em] text-muted-foreground">
+                                    {suggestion.category ?? 'Alamat'}
+                                    {' '}
+                                    •
+                                    {' '}
+                                    Pilih untuk pindahkan pin
+                                </span>
+                            </button>
+                        {/each}
+                    </div>
+                {/if}
+
+                <p class="text-xs leading-5 text-muted-foreground">
+                    Saran alamat memakai data OpenStreetMap. Pilih salah satu hasil
+                    untuk memindahkan pin secara otomatis.
+                </p>
+            </div>
             {#if errors.address_text}
                 <p class="text-sm font-medium text-destructive">
                     {errors.address_text}
@@ -416,3 +757,54 @@
         </details>
     </div>
 </div>
+
+<style>
+    :global(.booking-location-marker) {
+        background: transparent;
+        border: none;
+    }
+
+    :global(.booking-location-marker__pin) {
+        position: relative;
+        display: flex;
+        width: 30px;
+        height: 42px;
+        align-items: center;
+        justify-content: center;
+        filter: drop-shadow(0 10px 16px rgb(15 23 42 / 0.24));
+    }
+
+    :global(.booking-location-marker__ring) {
+        position: absolute;
+        top: 0;
+        width: 30px;
+        height: 30px;
+        border-radius: 9999px;
+        background: rgb(var(--brand-primary-rgb) / 0.16);
+        box-shadow: 0 0 0 8px rgb(var(--brand-primary-rgb) / 0.08);
+    }
+
+    :global(.booking-location-marker__body) {
+        position: absolute;
+        top: 0;
+        width: 22px;
+        height: 22px;
+        border-radius: 9999px 9999px 9999px 0;
+        background: linear-gradient(
+            180deg,
+            rgb(var(--brand-primary-rgb)) 0%,
+            rgb(var(--brand-accent-rgb)) 100%
+        );
+        transform: rotate(-45deg);
+    }
+
+    :global(.booking-location-marker__dot) {
+        position: absolute;
+        top: 6px;
+        width: 8px;
+        height: 8px;
+        border-radius: 9999px;
+        background: rgb(255 255 255);
+        box-shadow: 0 0 0 2px rgb(15 23 42 / 0.08);
+    }
+</style>

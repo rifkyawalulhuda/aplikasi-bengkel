@@ -24,6 +24,23 @@
         booking: AdminBookingDetail;
         statusOptions: AdminBookingStatusOption[];
     } = $props();
+
+    function buildWhatsappUrl(phone: string, message: string): string {
+        const digitsOnly = phone.replace(/\D+/g, '');
+
+        if (!digitsOnly) {
+            return '#';
+        }
+
+        return `https://wa.me/${digitsOnly}?text=${encodeURIComponent(message)}`;
+    }
+
+    const customerWhatsappUrl = $derived(
+        buildWhatsappUrl(
+            booking.customer.phone,
+            `Halo ${booking.customer.name}, kami dari Bengkel Home Service ingin mengonfirmasi booking ${booking.bookingCode}.`,
+        ),
+    );
 </script>
 
 <AppHead title={`Booking ${booking.bookingCode}`} />
@@ -89,7 +106,7 @@
                         <div>
                             <p class="text-muted-foreground">Email</p>
                             <p class="font-medium text-foreground">
-                                {booking.customer.email}
+                                {booking.customer.email || '-'}
                             </p>
                         </div>
                         <div
@@ -108,6 +125,19 @@
                                     value={booking.customer.phone}
                                     label="nomor WhatsApp customer"
                                 />
+                                <Button asChild variant="outline" class="w-full sm:w-auto">
+                                    {#snippet children(props)}
+                                        <a
+                                            href={customerWhatsappUrl}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            aria-label="Chat customer via WhatsApp"
+                                            {...props}
+                                        >
+                                            Chat WhatsApp customer
+                                        </a>
+                                    {/snippet}
+                                </Button>
                             </div>
                         </div>
                     </div>

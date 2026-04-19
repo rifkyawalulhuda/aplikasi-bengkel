@@ -14,6 +14,9 @@ return [
         'rate_limited' => 'Terlalu banyak percobaan booking dari perangkat ini.',
         'submission_failed' => 'Booking belum berhasil dikirim. Silakan coba lagi beberapa saat lagi atau hubungi admin lewat WhatsApp.',
     ],
+    'notifications' => [
+        'email_enabled' => env('BOOKING_EMAIL_ENABLED', false),
+    ],
     'slot_interval_minutes' => 60,
     'available_hours' => [
         '08:00',

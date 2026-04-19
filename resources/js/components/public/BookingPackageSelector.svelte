@@ -19,12 +19,14 @@
         servicePackageId = $bindable<number | null>(null),
         packageTypes,
         packages,
+        onSelectionChange = () => {},
         errors = {},
     }: {
         packageType?: BookingPackageType;
         servicePackageId?: number | null;
         packageTypes: SelectOption[];
         packages: ServicePackageSummary[];
+        onSelectionChange?: () => void;
         errors?: Record<string, string>;
     } = $props();
 
@@ -38,6 +40,8 @@
         if (value === 'custom_package') {
             servicePackageId = null;
         }
+
+        onSelectionChange();
     }
 </script>
 
@@ -118,7 +122,10 @@
                                     ? 'border-primary/25 bg-primary/8 shadow-sm'
                                     : 'border-border/70 bg-card hover:border-primary/40'
                             }`}
-                            onclick={() => (servicePackageId = item.id)}
+                            onclick={() => {
+                                servicePackageId = item.id;
+                                onSelectionChange();
+                            }}
                         >
                             <Card
                                 class="h-full border-0 bg-transparent shadow-none"
@@ -195,7 +202,10 @@
             <Button
                 type="button"
                 variant="outline"
-                onclick={() => (servicePackageId = null)}
+                onclick={() => {
+                    servicePackageId = null;
+                    onSelectionChange();
+                }}
             >
                 Reset pilihan paket
             </Button>

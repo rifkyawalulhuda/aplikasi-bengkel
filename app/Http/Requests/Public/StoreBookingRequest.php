@@ -29,14 +29,14 @@ class StoreBookingRequest extends FormRequest
             ],
             'custom_items' => [
                 Rule::requiredIf($this->input('package_type') === PackageType::CustomPackage->value),
-                'nullable',
+                'exclude_unless:package_type,'.PackageType::CustomPackage->value,
                 'array',
                 'min:1',
             ],
             'custom_items.*.id' => ['required_with:custom_items', 'integer', 'exists:custom_service_items,id'],
             'custom_items.*.qty' => ['required_with:custom_items', 'integer', 'min:1'],
             'customer_name' => ['required', 'string', 'max:100'],
-            'customer_email' => ['required', 'email', 'max:100'],
+            'customer_email' => ['nullable', 'email', 'max:100'],
             'customer_phone' => ['required', 'string', 'max:30'],
             'motorcycle_type' => ['required', Rule::enum(MotorcycleType::class)],
             'motorcycle_brand' => ['required', 'string', 'max:100'],
@@ -119,7 +119,6 @@ class StoreBookingRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'customer_email.email' => 'Alamat email pelanggan harus valid.',
             'custom_items.min' => 'Minimal satu item custom harus dipilih.',
             'service_date.after_or_equal' => 'Tanggal servis tidak boleh di masa lalu.',
             'service_time.in' => 'Slot jadwal yang dipilih tidak tersedia. Silakan pilih jam lain.',
@@ -133,7 +132,6 @@ class StoreBookingRequest extends FormRequest
             'service_package_id' => 'paket servis',
             'custom_items' => 'item custom',
             'customer_name' => 'nama pelanggan',
-            'customer_email' => 'email pelanggan',
             'customer_phone' => 'nomor telepon pelanggan',
             'motorcycle_type' => 'jenis motor',
             'motorcycle_brand' => 'merek motor',

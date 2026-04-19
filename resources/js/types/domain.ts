@@ -73,7 +73,6 @@ export type BookingPackageType = 'fixed_package' | 'custom_package';
 
 export type BookingCustomerForm = {
     name: string;
-    email: string;
     phone: string;
 };
 

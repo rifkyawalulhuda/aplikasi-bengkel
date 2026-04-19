@@ -18,8 +18,7 @@ class CreateBookingAction
         private readonly GenerateBookingCodeAction $generateBookingCode,
         private readonly ValidateBookingSlotAction $validateBookingSlot,
         private readonly ValidateCoverageAreaAction $validateCoverageArea,
-    ) {
-    }
+    ) {}
 
     public function handle(array $attributes): Booking
     {
@@ -53,7 +52,7 @@ class CreateBookingAction
             $booking = Booking::create([
                 'booking_code' => $this->generateBookingCode->handle(CarbonImmutable::parse($attributes['service_date'])),
                 'customer_name' => $attributes['customer_name'],
-                'customer_email' => $attributes['customer_email'],
+                'customer_email' => $attributes['customer_email'] ?? '',
                 'customer_phone' => $attributes['customer_phone'],
                 'motorcycle_type' => $attributes['motorcycle_type'],
                 'motorcycle_brand' => $attributes['motorcycle_brand'],
@@ -96,7 +95,9 @@ class CreateBookingAction
                 'note' => $statusLogNote,
             ]);
 
-            SendBookingConfirmationEmailJob::dispatch($booking->id)->afterCommit();
+            if ((bool) config('booking.notifications.email_enabled')) {
+                SendBookingConfirmationEmailJob::dispatch($booking->id)->afterCommit();
+            }
 
             return $booking->load(['customItems', 'statusLogs']);
         });

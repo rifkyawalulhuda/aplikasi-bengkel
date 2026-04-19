@@ -11,11 +11,13 @@
         selectedItems = $bindable<BookingCustomItemSelection[]>([]),
         customItems,
         visible = true,
+        onSelectionChange = () => {},
         errors = {},
     }: {
         selectedItems?: BookingCustomItemSelection[];
         customItems: CustomServiceItemSummary[];
         visible?: boolean;
+        onSelectionChange?: () => void;
         errors?: Record<string, string>;
     } = $props();
 
@@ -28,6 +30,7 @@
             selectedItems = selectedItems.filter(
                 (entry) => entry.id !== itemId,
             );
+            onSelectionChange();
 
             return;
         }
@@ -38,11 +41,13 @@
             selectedItems = selectedItems.map((entry) =>
                 entry.id === itemId ? { ...entry, qty: nextQty } : entry,
             );
+            onSelectionChange();
 
             return;
         }
 
         selectedItems = [...selectedItems, { id: itemId, qty: nextQty }];
+        onSelectionChange();
     }
 </script>
 

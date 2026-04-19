@@ -66,7 +66,7 @@
                 </Badge>
                 <div class="space-y-2">
                     <CardTitle class="text-2xl leading-tight md:text-3xl">
-                        Ringkasan aman untuk booking {booking.code}
+                        No Booking : {booking.code}
                     </CardTitle>
                     <p class="max-w-2xl text-sm leading-7 text-muted-foreground md:text-base">
                         Halaman ini hanya menampilkan informasi publik yang diperlukan untuk pengecekan status booking. Detail pribadi seperti alamat, nomor telepon, dan catatan internal tidak ditampilkan di sini.
