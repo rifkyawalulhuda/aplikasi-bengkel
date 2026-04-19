@@ -39,7 +39,7 @@
         {#snippet children({ errors, processing })}
             <div class="grid gap-5">
                 <div class="grid gap-2">
-                    <Label for="email">Email admin</Label>
+                    <Label for="email" class="font-bold text-black">Email admin</Label>
                     <Input
                         id="email"
                         type="email"
@@ -54,7 +54,7 @@
 
                 <div class="grid gap-2">
                     <div class="flex items-center justify-between gap-3">
-                        <Label for="password">Password</Label>
+                        <Label for="password" class="font-bold text-black">Password</Label>
                         {#if canResetPassword}
                             <a href={request().url} class="text-sm text-primary">
                                 Lupa password?
