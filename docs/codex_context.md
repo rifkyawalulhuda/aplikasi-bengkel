@@ -69,10 +69,15 @@ Dokumen ini tidak menggantikan PRD. Fungsinya adalah sebagai handoff praktis ten
 - Kontak WhatsApp/telepon website sekarang sumber utamanya dari `.env` lewat `WORKSHOP_CONTACT_PHONE` dan `WORKSHOP_CONTACT_WHATSAPP`.
 - Tombol `Hubungi Admin` di landing page mengarah langsung ke WhatsApp admin.
 - Fitur email booking sudah dinonaktifkan sebagai default dan fokus operasional saat ini ada di WhatsApp.
+- Nomor WhatsApp/telepon di seluruh website sekarang harus bersumber dari `.env` dan tidak lagi hardcoded di UI publik.
 - Hero pembuka halaman booking sudah dihapus supaya user langsung masuk ke alur form booking.
 - Mobile booking flow sudah diringkas agar step overview tidak memakan ruang berlebih.
+- Kartu paket dan item custom di mobile sekarang dibuat lebih ringkas berbentuk accordion/dynamic panel.
 - Step booking berikutnya otomatis scroll ke atas section supaya alur lebih nyaman di HP.
 - Sidebar/admin dashboard sempat dipoles ke tampilan default shadcn dan beberapa area sudah dikembalikan ke style library yang netral.
+- Dashboard admin punya kartu pengaturan service fee dan footer location.
+- Service fee sekarang disimpan di `booking_settings` dan bisa diubah dari dashboard admin tanpa edit kode.
+- Footer publik menampilkan peta OpenStreetMap/Leaflet, dan alamat footer bisa diatur dari dashboard admin.
 
 ## 4. Route Penting yang Aktif Sekarang
 
@@ -91,6 +96,8 @@ Dokumen ini tidak menggantikan PRD. Fungsinya adalah sebagai handoff praktis ten
 - `GET /admin/bookings/{booking:booking_code}`
 - `PATCH /admin/bookings/{booking:booking_code}/status`
 - `PATCH /admin/bookings/{booking:booking_code}/notes`
+- `PATCH /admin/booking-settings/service-fee`
+- `PATCH /admin/booking-settings/footer-location`
 - `GET /admin/service-packages`
 - `POST /admin/service-packages`
 - `PATCH /admin/service-packages/{servicePackage}`
@@ -133,6 +140,8 @@ php artisan db:seed --class=AdminSeeder
 
 - `config/workshop.php`
 - `config/booking.php`
+- `database/migrations/2026_04_20_000000_create_booking_settings_table.php`
+- `database/migrations/2026_04_20_000001_add_footer_location_to_booking_settings_table.php`
 
 ### Public pages
 
@@ -150,16 +159,22 @@ php artisan db:seed --class=AdminSeeder
 - `resources/js/components/public/HowItWorksSection.svelte`
 - `resources/js/components/public/FaqSection.svelte`
 - `resources/js/components/public/PublicFooter.svelte`
+- `resources/js/components/public/PublicFooterMap.svelte`
 - `resources/js/components/public/BookingForm.svelte`
 - `resources/js/components/public/BookingPriceSummary.svelte`
 - `resources/js/components/public/BookingCtaSection.svelte`
 - `resources/js/components/public/BookingLocationPicker.svelte`
+- `resources/js/components/public/BookingPackageSelector.svelte`
+- `resources/js/components/public/BookingCustomItemsSelector.svelte`
 
 ### Public backend
 
 - `app/Http/Controllers/Public/LandingPageController.php`
 - `app/Http/Controllers/Public/BookingController.php`
 - `app/Actions/Booking/*`
+- `app/Actions/Booking/GetBookingFooterLocationAction.php`
+- `app/Actions/Booking/UpdateBookingFooterLocationAction.php`
+- `app/Models/BookingSetting.php`
 - `app/Http/Requests/Public/StoreBookingRequest.php`
 
 ### Admin pages dan components
@@ -173,6 +188,8 @@ php artisan db:seed --class=AdminSeeder
 - `resources/js/components/admin/AdminSidebar.svelte`
 - `resources/js/components/admin/AdminHeader.svelte`
 - `resources/js/components/admin/BookingsTable.svelte`
+- `resources/js/components/admin/BookingServiceFeeCard.svelte`
+- `resources/js/components/admin/BookingFooterLocationCard.svelte`
 
 ### Admin backend
 
@@ -181,6 +198,8 @@ php artisan db:seed --class=AdminSeeder
 - `app/Http/Controllers/Admin/ServicePackageController.php`
 - `app/Http/Controllers/Admin/CustomServiceItemController.php`
 - `app/Http/Controllers/Admin/VisitorController.php`
+- `app/Http/Controllers/Admin/BookingSettingController.php`
+- `app/Http/Requests/Admin/UpdateBookingFooterLocationRequest.php`
 
 ### Types frontend
 
@@ -209,9 +228,12 @@ Saat melanjutkan pengembangan, jangan rusak aturan ini:
 - footer memakai warna brand primary
 - nomor telepon di footer tetap tampil sebagai teks nomor, tetapi klik mengarah ke WhatsApp
 - tombol `Hubungi Admin` di landing page juga mengarah ke WhatsApp admin
+- footer publik menampilkan lokasi bengkel dalam bentuk peta OpenStreetMap
+- alamat/koordinat footer bisa diubah dari dashboard admin
 - booking mobile price preview sudah dibuat lebih ringkas/interaktif
 - booking mobile step overview dibuat compact supaya ruang form lebih lega
 - alamat booking memakai peta OpenStreetMap/Leaflet dengan pin, suggestion alamat, dan geocoding/reverse geocoding
+- mobile booking package selector dan custom item selector memakai tampilan accordion yang lebih hemat ruang
 - landing page package cards sekarang maksimal 3
 - badge featured package berasal dari admin
 - admin dashboard memakai palet brand yang sama, tetapi visualnya tetap lebih restrained daripada landing page
@@ -243,6 +265,9 @@ Catatan terbaru:
 - field kontak sekarang dibaca dari `.env`
 - `WORKSHOP_CONTACT_PHONE` dan `WORKSHOP_CONTACT_WHATSAPP` harus diisi jika ingin semua link WA konsisten
 - tidak ada lagi nomor WhatsApp hardcoded sebagai fallback di UI publik
+- field footer map juga dibaca dari `.env`
+- `WORKSHOP_FOOTER_ADDRESS`, `WORKSHOP_FOOTER_LATITUDE`, dan `WORKSHOP_FOOTER_LONGITUDE` dipakai sebagai fallback lokasi awal
+- service fee sekarang disimpan di singleton `booking_settings`, lalu disediakan ke UI public dan admin dari sumber yang sama
 
 Kalau user bertanya "di mana ubah teks ini?", sering kali jawabannya ada di:
 
@@ -320,6 +345,7 @@ vendor/bin/pint --dirty --format agent
 - Jika phpMyAdmin malah diarahkan ke Herd, cek routing/domain lokal di environment Windows dan Herd, bukan di kode aplikasi.
 - Kalau link WhatsApp tidak berubah, cek `.env` lalu jalankan `php artisan config:clear` dan `php artisan config:cache`.
 - Booking public saat ini memprioritaskan WhatsApp sebagai jalur konfirmasi, jadi jangan kaget bila email booking tidak aktif secara default.
+- Kalau alamat footer atau service fee tidak berubah, cek halaman admin dashboard, simpan ulang pengaturannya, lalu clear config cache bila perlu.
 
 ## 13. Status Testing Terakhir yang Diketahui
 
@@ -330,6 +356,8 @@ Status terakhir yang sempat dijalankan:
 - test fitur `ServicePackageManagementTest` -> lulus
 - verifikasi browser publik untuk tombol WhatsApp landing page -> lulus
 - `npm run types:check` -> lulus setelah perubahan UI/booking terakhir
+- test fitur `BookingFooterLocationManagementTest` -> lulus
+- test fitur booking/public pages untuk footer map, booking flow, dan mobile booking selector -> lulus
 
 Tetap jalankan ulang test yang relevan setelah perubahan baru.
 
