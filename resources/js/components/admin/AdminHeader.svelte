@@ -1,5 +1,7 @@
 <script lang="ts">
     import { Link, page } from '@inertiajs/svelte';
+    import Menu from 'lucide-svelte/icons/menu';
+    import { SheetTrigger } from '@/components/ui/sheet';
     import { Button } from '@/components/ui/button';
     import { home, logout } from '@/routes';
 
@@ -12,11 +14,34 @@
         ? 'border-border/70 bg-background text-foreground'
         : 'border-slate-900/10 bg-[linear-gradient(135deg,#122631_0%,#183543_58%,#214452_100%)] text-white shadow-[0_18px_40px_-26px_rgba(18,38,49,0.72)]'
 }`}>
-    <div class="flex flex-col gap-1">
-        <p class={`text-sm font-semibold uppercase tracking-[0.2em] ${isDashboardRoute ? 'text-muted-foreground' : 'text-[#03AED2]'}`}>
-            Dashboard Admin
-        </p>
-        <h1 class={`text-2xl font-semibold ${isDashboardRoute ? 'text-foreground' : 'text-[#F8DE22]'}`}>Operasional bengkel home service</h1>
+    <div class="flex items-start justify-between gap-3 md:items-center">
+        <div class="flex items-start gap-3">
+            <div class="lg:hidden">
+                <SheetTrigger asChild>
+                    {#snippet children(props)}
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            class={isDashboardRoute
+                                ? 'border-border/70 bg-background text-foreground hover:bg-muted hover:text-foreground'
+                                : 'border-white/16 bg-white/6 text-white hover:bg-white/10 hover:text-white'}
+                            {...props}
+                        >
+                            <Menu class="size-4" />
+                            <span class="sr-only">Buka menu admin</span>
+                        </Button>
+                    {/snippet}
+                </SheetTrigger>
+            </div>
+
+            <div class="flex flex-col gap-1">
+                <p class={`text-sm font-semibold uppercase tracking-[0.2em] ${isDashboardRoute ? 'text-muted-foreground' : 'text-[#03AED2]'}`}>
+                    Dashboard Admin
+                </p>
+                <h1 class={`text-2xl font-semibold ${isDashboardRoute ? 'text-foreground' : 'text-[#F8DE22]'}`}>Operasional bengkel home service</h1>
+            </div>
+        </div>
     </div>
 
     <div class="flex items-center gap-3">

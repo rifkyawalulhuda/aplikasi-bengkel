@@ -90,6 +90,15 @@ test('authenticated users can visit the dashboard', function () {
     $response->assertOk();
 });
 
+test('dashboard header exposes a mobile sidebar menu trigger', function () {
+    $user = User::factory()->create();
+    $this->actingAs($user);
+
+    $this->get(route('admin.dashboard'))
+        ->assertOk()
+        ->assertSee('Buka menu admin');
+});
+
 test('authenticated admin can view operational dashboard stats and seven day visitor trend', function () {
     $user = User::factory()->create();
     $this->actingAs($user);
