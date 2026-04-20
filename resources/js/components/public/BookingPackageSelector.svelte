@@ -34,13 +34,42 @@
         packages.find((item) => item.id === servicePackageId) ?? null,
     );
 
+    let expandedPackageId = $state<number | null>(null);
+
+    $effect(() => {
+        if (packageType !== 'fixed_package') {
+            expandedPackageId = null;
+            return;
+        }
+
+        if (
+            servicePackageId !== null &&
+            packages.some((item) => item.id === servicePackageId)
+        ) {
+            expandedPackageId = servicePackageId;
+        }
+    });
+
     function selectType(value: BookingPackageType) {
         packageType = value;
 
         if (value === 'custom_package') {
             servicePackageId = null;
+            expandedPackageId = null;
         }
 
+        onSelectionChange();
+    }
+
+    function selectPackage(packageId: number) {
+        servicePackageId = packageId;
+        expandedPackageId = packageId;
+        onSelectionChange();
+    }
+
+    function togglePackagePanel(packageId: number) {
+        expandedPackageId =
+            expandedPackageId === packageId ? null : packageId;
         onSelectionChange();
     }
 </script>
@@ -111,7 +140,118 @@
                     bisa lanjut memakai paket custom jika dibutuhkan.
                 </div>
             {:else}
-                <div class="grid gap-4 lg:grid-cols-2">
+                <div class="space-y-3 lg:hidden">
+                    {#each packages as item (item.id)}
+                        {@const isSelected = servicePackageId === item.id}
+                        {@const isExpanded = expandedPackageId === item.id}
+
+                        <article
+                            class={`overflow-hidden rounded-[1.5rem] border transition ${
+                                isSelected
+                                    ? 'border-primary/25 bg-primary/8 shadow-sm'
+                                    : 'border-border/70 bg-card'
+                            }`}
+                        >
+                            <button
+                                type="button"
+                                aria-expanded={isExpanded}
+                                aria-controls={`mobile-package-panel-${item.id}`}
+                                aria-label={`Buka detail paket ${item.name}`}
+                                class="flex w-full items-start justify-between gap-4 px-4 py-4 text-left"
+                                onclick={() => togglePackagePanel(item.id)}
+                            >
+                                <div class="space-y-2">
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <p class="text-base font-semibold text-foreground">
+                                            {item.name}
+                                        </p>
+
+                                        {#if isSelected}
+                                            <Badge
+                                                variant="secondary"
+                                                class="rounded-full px-3 py-1 text-xs"
+                                            >
+                                                Terpilih
+                                            </Badge>
+                                        {/if}
+                                    </div>
+
+                                    <div class="flex items-center gap-2">
+                                        <p class="text-sm font-semibold text-primary">
+                                            {formatCurrency(item.price)}
+                                        </p>
+                                        <Badge
+                                            variant="secondary"
+                                            class="rounded-full px-3 py-1 text-xs"
+                                        >
+                                            {Math.round(
+                                                item.durationEstimateMinutes /
+                                                    60,
+                                            )} jam
+                                        </Badge>
+                                    </div>
+
+                                    {#if item.shortDescription}
+                                        <p
+                                            class="max-h-12 overflow-hidden text-sm leading-6 text-muted-foreground"
+                                        >
+                                            {item.shortDescription}
+                                        </p>
+                                    {/if}
+                                </div>
+
+                                <span
+                                    class={`mt-1 inline-flex size-9 shrink-0 items-center justify-center rounded-full border transition duration-200 ${
+                                        isExpanded
+                                            ? 'rotate-180 border-primary/25 bg-primary text-primary-foreground'
+                                            : 'border-border/70 bg-muted text-muted-foreground'
+                                    }`}
+                                    aria-hidden="true"
+                                >
+                                    ▾
+                                </span>
+                            </button>
+
+                            <div
+                                id={`mobile-package-panel-${item.id}`}
+                                class={`grid overflow-hidden transition-all duration-300 ease-out ${
+                                    isExpanded
+                                        ? 'grid-rows-[1fr] opacity-100'
+                                        : 'grid-rows-[0fr] opacity-0'
+                                }`}
+                            >
+                                <div class="min-h-0 px-4 pb-4">
+                                    <div class="space-y-4 rounded-[1.25rem] border border-border/60 bg-background/80 p-4">
+                                        <ul class="grid gap-2 text-sm text-muted-foreground">
+                                            {#each item.items as packageItem (packageItem.id)}
+                                                <li
+                                                    class="rounded-2xl bg-muted px-3 py-2"
+                                                >
+                                                    {packageItem.name}
+                                                </li>
+                                            {/each}
+                                        </ul>
+
+                                        <Button
+                                            type="button"
+                                            variant={isSelected
+                                                ? 'secondary'
+                                                : 'outline'}
+                                            class="h-11 w-full rounded-full"
+                                            onclick={() => selectPackage(item.id)}
+                                        >
+                                            {isSelected
+                                                ? 'Paket terpilih'
+                                                : 'Pilih paket ini'}
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+                        </article>
+                    {/each}
+                </div>
+
+                <div class="hidden gap-4 lg:grid lg:grid-cols-2">
                     {#each packages as item (item.id)}
                         <button
                             type="button"
@@ -134,10 +274,9 @@
                                     <div
                                         class="flex items-start justify-between gap-4"
                                     >
-                                        <CardTitle
-                                            class="text-xl tracking-tight"
-                                            >{item.name}</CardTitle
-                                        >
+                                        <CardTitle class="text-xl tracking-tight">
+                                            {item.name}
+                                        </CardTitle>
                                         <Badge
                                             variant="secondary"
                                             class="rounded-full px-3 py-1 text-xs"
@@ -157,15 +296,11 @@
                                     {/if}
                                 </CardHeader>
                                 <CardContent class="space-y-4">
-                                    <p
-                                        class="text-lg font-semibold text-primary"
-                                    >
+                                    <p class="text-lg font-semibold text-primary">
                                         {formatCurrency(item.price)}
                                     </p>
 
-                                    <ul
-                                        class="grid gap-2 text-sm text-muted-foreground"
-                                    >
+                                    <ul class="grid gap-2 text-sm text-muted-foreground">
                                         {#each item.items as packageItem (packageItem.id)}
                                             <li
                                                 class="rounded-2xl bg-muted px-3 py-2"
