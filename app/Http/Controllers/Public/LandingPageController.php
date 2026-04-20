@@ -28,6 +28,7 @@ class LandingPageController extends Controller
             'cta' => config('workshop.landing.cta'),
             'packages' => $bookingPageData['packages'],
             'customItems' => $bookingPageData['customItems'],
+            'serviceFee' => $bookingPageData['serviceFee'],
             'availableSlots' => $bookingPageData['availableSlots'],
         ]);
     }

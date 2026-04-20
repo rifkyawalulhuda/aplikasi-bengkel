@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\BookingManagementController;
+use App\Http\Controllers\Admin\BookingSettingController;
 use App\Http\Controllers\Admin\CustomServiceItemController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ServicePackageController;
@@ -36,12 +37,12 @@ Route::prefix('admin')->name('admin.')->group(function (): void {
         Route::prefix('service-packages')->name('service-packages.')->controller(ServicePackageController::class)->group(function (): void {
             Route::get('/', 'index')->name('index');
             Route::post('/', 'store')->name('store');
-        Route::get('/{servicePackage}/edit', 'edit')->name('edit');
-        Route::patch('/{servicePackage}', 'update')->name('update');
-        Route::patch('/{servicePackage}/activate', 'activate')->name('activate');
-        Route::patch('/{servicePackage}/deactivate', 'deactivate')->name('deactivate');
-        Route::delete('/{servicePackage}', 'destroy')->name('destroy');
-    });
+            Route::get('/{servicePackage}/edit', 'edit')->name('edit');
+            Route::patch('/{servicePackage}', 'update')->name('update');
+            Route::patch('/{servicePackage}/activate', 'activate')->name('activate');
+            Route::patch('/{servicePackage}/deactivate', 'deactivate')->name('deactivate');
+            Route::delete('/{servicePackage}', 'destroy')->name('destroy');
+        });
 
         Route::prefix('custom-service-items')->name('custom-service-items.')->controller(CustomServiceItemController::class)->group(function (): void {
             Route::get('/', 'index')->name('index');
@@ -51,6 +52,9 @@ Route::prefix('admin')->name('admin.')->group(function (): void {
             Route::patch('/{customServiceItem}/deactivate', 'deactivate')->name('deactivate');
             Route::delete('/{customServiceItem}', 'destroy')->name('destroy');
         });
+
+        Route::patch('/booking-settings/service-fee', [BookingSettingController::class, 'updateServiceFee'])
+            ->name('booking-settings.service-fee');
 
         Route::get('/visitors', [VisitorController::class, 'index'])->name('visitors.index');
     });

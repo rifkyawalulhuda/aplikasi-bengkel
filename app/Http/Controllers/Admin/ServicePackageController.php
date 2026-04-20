@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\Booking\GetBookingServiceFeeAction;
 use App\Actions\ServicePackage\ActivateServicePackageAction;
 use App\Actions\ServicePackage\DeactivateServicePackageAction;
 use App\Actions\ServicePackage\DeleteServicePackageAction;
@@ -16,16 +17,27 @@ use Inertia\Response;
 
 class ServicePackageController extends Controller
 {
-    public function index(): Response
+    public function index(GetBookingServiceFeeAction $getBookingServiceFee): Response
     {
-        return Inertia::render('admin/ServicePackagesPage', $this->pageData());
+        return Inertia::render(
+            'admin/ServicePackagesPage',
+            $this->pageData(serviceFee: $getBookingServiceFee->handle()),
+        );
     }
 
-    public function edit(ServicePackage $servicePackage): Response
-    {
+    public function edit(
+        ServicePackage $servicePackage,
+        GetBookingServiceFeeAction $getBookingServiceFee,
+    ): Response {
         $servicePackage->load('items');
 
-        return Inertia::render('admin/ServicePackagesPage', $this->pageData($servicePackage));
+        return Inertia::render(
+            'admin/ServicePackagesPage',
+            $this->pageData(
+                editingPackage: $servicePackage,
+                serviceFee: $getBookingServiceFee->handle(),
+            ),
+        );
     }
 
     public function store(StoreServicePackageRequest $request, UpsertServicePackageAction $upsertServicePackage): RedirectResponse
@@ -109,8 +121,10 @@ class ServicePackageController extends Controller
         return to_route('admin.service-packages.index');
     }
 
-    private function pageData(?ServicePackage $editingPackage = null): array
-    {
+    private function pageData(
+        ?ServicePackage $editingPackage = null,
+        int $serviceFee = 0,
+    ): array {
         $packages = ServicePackage::query()
             ->with(['items:id,service_package_id,name,description,display_order'])
             ->withCount('bookings')
@@ -139,6 +153,7 @@ class ServicePackageController extends Controller
             ->all();
 
         return [
+            'serviceFee' => $serviceFee,
             'packages' => $packages,
             'editingPackage' => $editingPackage
                 ? [

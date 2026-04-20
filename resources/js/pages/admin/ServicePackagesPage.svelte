@@ -1,6 +1,7 @@
 <script lang="ts">
     import { Form, Link } from '@inertiajs/svelte';
     import AppHead from '@/components/AppHead.svelte';
+    import BookingServiceFeeCard from '@/components/admin/BookingServiceFeeCard.svelte';
     import ServicePackageForm from '@/components/admin/ServicePackageForm.svelte';
     import { Badge } from '@/components/ui/badge';
     import { Button } from '@/components/ui/button';
@@ -18,9 +19,11 @@
 
     let {
         packages,
+        serviceFee,
         editingPackage = null,
     }: {
         packages: AdminServicePackageSummary[];
+        serviceFee: number;
         editingPackage?: AdminServicePackageFormData | null;
     } = $props();
 
@@ -40,6 +43,8 @@
             Paket aktif akan muncul di halaman publik. Paket inactive tetap bisa disimpan untuk arsip admin, diaktifkan kembali kapan saja, atau dihapus permanen jika sudah tidak dipakai.
         </p>
     </div>
+
+    <BookingServiceFeeCard {serviceFee} />
 
     <div class="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
         <Card class="border-primary/16 bg-white/88 shadow-[0_24px_54px_-40px_rgb(var(--brand-primary-rgb)/0.36)] backdrop-blur-sm">

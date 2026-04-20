@@ -10,6 +10,10 @@ use Illuminate\Support\Facades\Schema;
 
 class GetPublicBookingPageDataAction
 {
+    public function __construct(
+        private readonly GetBookingServiceFeeAction $getBookingServiceFee,
+    ) {}
+
     /**
      * @return array{
      *     packageTypes: array<int, array{value: string, label: string}>,
@@ -31,6 +35,7 @@ class GetPublicBookingPageDataAction
      *         price: int,
      *         unitLabel: string|null
      *     }>,
+     *     serviceFee: int,
      *     availableSlots: array<int, string>
      * }
      */
@@ -53,6 +58,7 @@ class GetPublicBookingPageDataAction
             ),
             'packages' => $this->packages(),
             'customItems' => $this->customItems(),
+            'serviceFee' => $this->getBookingServiceFee->handle(),
             'availableSlots' => config('booking.available_hours'),
         ];
     }

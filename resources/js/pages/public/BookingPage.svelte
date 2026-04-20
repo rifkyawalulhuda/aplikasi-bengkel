@@ -13,6 +13,7 @@
         seo,
         packages,
         customItems,
+        serviceFee,
         availableSlots,
         packageTypes,
         motorcycleTypes,
@@ -21,6 +22,7 @@
         seo: SeoMetadata;
         packages: ServicePackageSummary[];
         customItems: CustomServiceItemSummary[];
+        serviceFee: number;
         availableSlots: string[];
         packageTypes: SelectOption[];
         motorcycleTypes: SelectOption[];
@@ -38,6 +40,7 @@
 <BookingForm
     {packages}
     {customItems}
+    {serviceFee}
     {availableSlots}
     {packageTypes}
     {motorcycleTypes}

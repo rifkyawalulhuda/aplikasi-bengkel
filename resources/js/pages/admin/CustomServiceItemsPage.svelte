@@ -1,6 +1,7 @@
 <script lang="ts">
     import { Form, Link } from '@inertiajs/svelte';
     import AppHead from '@/components/AppHead.svelte';
+    import BookingServiceFeeCard from '@/components/admin/BookingServiceFeeCard.svelte';
     import CustomServiceItemForm from '@/components/admin/CustomServiceItemForm.svelte';
     import { Badge } from '@/components/ui/badge';
     import { Button } from '@/components/ui/button';
@@ -25,9 +26,11 @@
 
     let {
         items,
+        serviceFee,
         editingItem = null,
     }: {
         items: AdminCustomServiceItemSummary[];
+        serviceFee: number;
         editingItem?: AdminCustomServiceItemFormData | null;
     } = $props();
 
@@ -51,6 +54,8 @@
             tetap mengikuti harga saat transaksi dibuat.
         </p>
     </div>
+
+    <BookingServiceFeeCard {serviceFee} />
 
     <div class="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
         <Card class="border-primary/16 bg-white/88 shadow-[0_24px_54px_-40px_rgb(var(--brand-primary-rgb)/0.36)] backdrop-blur-sm">

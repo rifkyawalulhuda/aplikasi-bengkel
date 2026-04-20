@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\Booking\GetBookingServiceFeeAction;
 use App\Actions\CustomServiceItem\DeactivateCustomServiceItemAction;
 use App\Actions\CustomServiceItem\DeleteCustomServiceItemAction;
 use App\Actions\CustomServiceItem\UpsertCustomServiceItemAction;
@@ -15,14 +16,25 @@ use Inertia\Response;
 
 class CustomServiceItemController extends Controller
 {
-    public function index(): Response
+    public function index(GetBookingServiceFeeAction $getBookingServiceFee): Response
     {
-        return Inertia::render('admin/CustomServiceItemsPage', $this->pageData());
+        return Inertia::render(
+            'admin/CustomServiceItemsPage',
+            $this->pageData(serviceFee: $getBookingServiceFee->handle()),
+        );
     }
 
-    public function edit(CustomServiceItem $customServiceItem): Response
-    {
-        return Inertia::render('admin/CustomServiceItemsPage', $this->pageData($customServiceItem));
+    public function edit(
+        CustomServiceItem $customServiceItem,
+        GetBookingServiceFeeAction $getBookingServiceFee,
+    ): Response {
+        return Inertia::render(
+            'admin/CustomServiceItemsPage',
+            $this->pageData(
+                editingItem: $customServiceItem,
+                serviceFee: $getBookingServiceFee->handle(),
+            ),
+        );
     }
 
     public function store(
@@ -94,8 +106,10 @@ class CustomServiceItemController extends Controller
         return to_route('admin.custom-service-items.index');
     }
 
-    private function pageData(?CustomServiceItem $editingItem = null): array
-    {
+    private function pageData(
+        ?CustomServiceItem $editingItem = null,
+        int $serviceFee = 0,
+    ): array {
         $items = CustomServiceItem::query()
             ->withCount('bookingCustomItems')
             ->ordered()
@@ -115,6 +129,7 @@ class CustomServiceItemController extends Controller
             ->all();
 
         return [
+            'serviceFee' => $serviceFee,
             'items' => $items,
             'editingItem' => $editingItem
                 ? [

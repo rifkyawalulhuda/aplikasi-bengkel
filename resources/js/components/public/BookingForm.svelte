@@ -35,6 +35,7 @@
     let {
         packages,
         customItems,
+        serviceFee: bookingServiceFee = 0,
         availableSlots,
         packageTypes,
         motorcycleTypes,
@@ -48,6 +49,7 @@
     }: {
         packages: ServicePackageSummary[];
         customItems: CustomServiceItemSummary[];
+        serviceFee?: number;
         availableSlots: string[];
         packageTypes: SelectOption[];
         motorcycleTypes: SelectOption[];
@@ -139,7 +141,7 @@
               ),
     );
 
-    const serviceFee = $derived(0);
+    const serviceFee = $derived(bookingServiceFee);
     const total = $derived(subtotal + serviceFee);
 
     $effect(() => {

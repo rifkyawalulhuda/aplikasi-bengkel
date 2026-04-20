@@ -110,7 +110,7 @@
                     <div
                         class="rounded-[1.1rem] bg-white/6 px-3 py-3 text-xs leading-5 text-white/72"
                     >
-                        Harga berubah langsung saat paket atau item Anda diedit. Backend tetap menjadi sumber kebenaran final.
+                        Harga berubah langsung saat paket atau item Anda diedit.
                     </div>
 
                     {#if packageType === 'fixed_package'}

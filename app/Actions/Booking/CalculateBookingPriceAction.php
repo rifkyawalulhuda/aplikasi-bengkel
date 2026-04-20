@@ -9,9 +9,13 @@ use Illuminate\Validation\ValidationException;
 
 class CalculateBookingPriceAction
 {
+    public function __construct(
+        private readonly GetBookingServiceFeeAction $getBookingServiceFee,
+    ) {}
+
     public function handle(PackageType $packageType, ?int $servicePackageId, array $customItems = []): array
     {
-        $serviceFee = (int) config('booking.default_service_fee', 0);
+        $serviceFee = $this->getBookingServiceFee->handle();
 
         if ($packageType === PackageType::FixedPackage) {
             $servicePackage = ServicePackage::query()
@@ -64,7 +68,7 @@ class CalculateBookingPriceAction
 
         $snapshots = $requestedItems
             ->map(function (array $requestedItem) use ($activeItems): array {
-                /** @var \App\Models\CustomServiceItem $item */
+                /** @var CustomServiceItem $item */
                 $item = $activeItems->get($requestedItem['id']);
                 $qty = max(1, (int) $requestedItem['qty']);
                 $subtotal = $item->price * $qty;
