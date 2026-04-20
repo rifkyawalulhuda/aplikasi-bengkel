@@ -55,6 +55,8 @@ Route::prefix('admin')->name('admin.')->group(function (): void {
 
         Route::patch('/booking-settings/service-fee', [BookingSettingController::class, 'updateServiceFee'])
             ->name('booking-settings.service-fee');
+        Route::patch('/booking-settings/footer-location', [BookingSettingController::class, 'updateFooterLocation'])
+            ->name('booking-settings.footer-location');
 
         Route::get('/visitors', [VisitorController::class, 'index'])->name('visitors.index');
     });

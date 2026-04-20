@@ -1,5 +1,6 @@
 <script lang="ts">
     import AppHead from '@/components/AppHead.svelte';
+    import BookingFooterLocationCard from '@/components/admin/BookingFooterLocationCard.svelte';
     import DashboardStatCard from '@/components/admin/DashboardStatCard.svelte';
     import { Badge } from '@/components/ui/badge';
     import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,10 +9,16 @@
     let {
         stats,
         visitorTrend,
+        footerLocation,
         foundationChecklist,
     }: {
         stats: DashboardStats;
         visitorTrend: VisitorTrendPoint[];
+        footerLocation: {
+            address: string;
+            latitude: string;
+            longitude: string;
+        };
         foundationChecklist: string[];
     } = $props();
 
@@ -100,4 +107,6 @@
             </CardContent>
         </Card>
     </div>
+
+    <BookingFooterLocationCard {footerLocation} />
 </div>

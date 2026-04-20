@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Booking;
+use App\Models\BookingSetting;
 use App\Models\User;
 use App\Models\VisitorLog;
 use App\Support\Enums\BookingStatus;
@@ -155,4 +156,25 @@ test('authenticated admin can view operational dashboard stats and seven day vis
             ->where('visitorTrend.6.uniqueVisits', 2)
             ->where('visitorTrend.3.totalVisits', 0)
             ->has('foundationChecklist', 3));
+});
+
+test('dashboard exposes footer location settings to admin', function () {
+    $user = User::factory()->create();
+    $this->actingAs($user);
+
+    BookingSetting::query()->updateOrCreate([
+        'id' => 1,
+    ], [
+        'footer_address' => 'Jl. Badami Ciherang, Telukjambe Barat, Kab. Karawang',
+        'footer_latitude' => '-6.3025000',
+        'footer_longitude' => '107.3035000',
+    ]);
+
+    $this->get(route('admin.dashboard'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('admin/DashboardPage')
+            ->where('footerLocation.address', 'Jl. Badami Ciherang, Telukjambe Barat, Kab. Karawang')
+            ->where('footerLocation.latitude', '-6.3025000')
+            ->where('footerLocation.longitude', '107.3035000'));
 });

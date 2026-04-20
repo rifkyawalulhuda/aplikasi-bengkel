@@ -14,6 +14,11 @@
         brandName: string;
         contactPhone: string;
         contactWhatsapp: string;
+        footerLocation: {
+            address: string;
+            latitude: string;
+            longitude: string;
+        };
         serviceAreas: string[];
     });
 </script>
@@ -31,6 +36,7 @@
         brandName={workshop.brandName}
         contactPhone={workshop.contactPhone}
         contactWhatsapp={workshop.contactWhatsapp}
+        footerLocation={workshop.footerLocation}
         serviceAreas={workshop.serviceAreas}
     />
 </div>

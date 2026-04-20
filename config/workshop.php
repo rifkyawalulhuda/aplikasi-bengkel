@@ -5,6 +5,14 @@ return [
     'tagline' => 'Servis ringan motor panggilan untuk matic, bebek, dan sport.',
     'contact_phone' => env('WORKSHOP_CONTACT_PHONE', env('WORKSHOP_CONTACT_WHATSAPP', '')),
     'contact_whatsapp' => env('WORKSHOP_CONTACT_WHATSAPP', env('WORKSHOP_CONTACT_PHONE', '')),
+    'footer_location' => [
+        'address' => env(
+            'WORKSHOP_FOOTER_ADDRESS',
+            'Jl. Badami Ciherang, Telukjambe Barat, Kab. Karawang',
+        ),
+        'latitude' => env('WORKSHOP_FOOTER_LATITUDE', '-6.3025000'),
+        'longitude' => env('WORKSHOP_FOOTER_LONGITUDE', '107.3035000'),
+    ],
     'service_areas' => [
         'Karawang bagian barat',
         'karawang bagian timur',

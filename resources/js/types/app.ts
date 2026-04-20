@@ -9,6 +9,11 @@ export type AppSharedData = {
         brandName: string;
         contactPhone: string;
         contactWhatsapp: string;
+        footerLocation: {
+            address: string;
+            latitude: string;
+            longitude: string;
+        };
         serviceAreas: string[];
     };
 };

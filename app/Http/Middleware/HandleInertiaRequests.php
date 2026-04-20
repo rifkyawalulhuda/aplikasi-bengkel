@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\BookingSetting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\URL;
 use Inertia\Middleware;
@@ -52,6 +53,7 @@ class HandleInertiaRequests extends Middleware
                 'brandName' => config('workshop.brand_name'),
                 'contactPhone' => config('workshop.contact_phone'),
                 'contactWhatsapp' => config('workshop.contact_whatsapp'),
+                'footerLocation' => BookingSetting::currentFooterLocation(),
                 'serviceAreas' => config('workshop.service_areas', []),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',

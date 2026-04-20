@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\Booking\GetBookingFooterLocationAction;
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\VisitorLog;
@@ -13,7 +14,7 @@ use Inertia\Response;
 
 class DashboardController extends Controller
 {
-    public function index(): Response
+    public function index(GetBookingFooterLocationAction $getBookingFooterLocation): Response
     {
         $stats = [
             'bookingsToday' => 0,
@@ -67,6 +68,7 @@ class DashboardController extends Controller
         return Inertia::render('admin/DashboardPage', [
             'stats' => $stats,
             'visitorTrend' => $visitorTrend->values()->all(),
+            'footerLocation' => $getBookingFooterLocation->handle(),
             'foundationChecklist' => [
                 'Database schema siap untuk booking, paket, dan visitor analytics.',
                 'Auth admin sudah diprefix ke /admin.',

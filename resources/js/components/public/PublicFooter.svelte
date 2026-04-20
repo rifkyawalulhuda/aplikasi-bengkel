@@ -2,16 +2,23 @@
     import { Link } from '@inertiajs/svelte';
     import { create as bookingCreate } from '@/routes/bookings';
     import PublicBrandMark from '@/components/public/PublicBrandMark.svelte';
+    import PublicFooterMap from '@/components/public/PublicFooterMap.svelte';
 
     let {
         brandName,
         contactPhone,
         contactWhatsapp,
+        footerLocation,
         serviceAreas,
     }: {
         brandName: string;
         contactPhone: string;
         contactWhatsapp: string;
+        footerLocation: {
+            address: string;
+            latitude: string;
+            longitude: string;
+        };
         serviceAreas: string[];
     } = $props();
 
@@ -74,11 +81,14 @@
                 </div>
             </div>
             <p class="max-w-md text-sm leading-7 text-white/84">
-                Jl. badami ciherang, teluk jambe barat, kab. karawang
+                {footerLocation.address}
             </p>
-            <p class="text-sm font-medium text-white">
-                Karawang dan sekitarnya
-            </p>
+            <PublicFooterMap
+                address={footerLocation.address}
+                latitude={footerLocation.latitude}
+                longitude={footerLocation.longitude}
+                label="Lokasi bengkel"
+            />
         </div>
 
         <div class="flex flex-col gap-3">

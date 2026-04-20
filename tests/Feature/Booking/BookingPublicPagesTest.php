@@ -2,6 +2,7 @@
 
 use App\Models\Booking;
 use App\Models\BookingCustomItem;
+use App\Models\BookingSetting;
 use App\Models\CustomServiceItem;
 use App\Models\ServicePackage;
 use App\Support\Enums\BookingStatus;
@@ -85,6 +86,14 @@ function createPublicBooking(array $overrides = []): Booking
 }
 
 test('landing page loads with public booking data and only active services', function () {
+    BookingSetting::query()->updateOrCreate([
+        'id' => 1,
+    ], [
+        'footer_address' => 'Jl. Badami Ciherang, Telukjambe Barat, Kab. Karawang',
+        'footer_latitude' => '-6.3025000',
+        'footer_longitude' => '107.3035000',
+    ]);
+
     $activePackage = createLandingServicePackage([
         'name' => 'Paket Aktif Landing',
         'slug' => 'paket-aktif-landing',
@@ -116,6 +125,9 @@ test('landing page loads with public booking data and only active services', fun
         ->assertInertia(fn (Assert $page) => $page
             ->component('public/LandingPage')
             ->where('seo.canonicalUrl', route('home'))
+            ->where('workshop.footerLocation.address', 'Jl. Badami Ciherang, Telukjambe Barat, Kab. Karawang')
+            ->where('workshop.footerLocation.latitude', '-6.3025000')
+            ->where('workshop.footerLocation.longitude', '107.3035000')
             ->has('availableSlots')
             ->has('packages', 1)
             ->where('packages.0.name', $activePackage->name)
