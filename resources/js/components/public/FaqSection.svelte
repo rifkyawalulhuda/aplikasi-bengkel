@@ -15,10 +15,10 @@
                 Pertanyaan Umum
             </p>
             <h2 class="mt-4 text-balance text-3xl font-black tracking-[-0.04em] text-foreground md:text-5xl">
-                Informasi penting dibuat ringkas supaya pelanggan cepat yakin sebelum masuk ke flow booking.
+                Informasi penting, disajikan singkat. Biar kamu cepat paham dan yakin sebelum booking.
             </h2>
             <p class="mt-4 text-base leading-7 text-muted-foreground md:text-lg">
-                Jawaban di bawah ini sengaja disusun singkat, jelas, dan tetap ramah dibaca dari layar ponsel.
+                Semua informasi penting sudah kami rangkum khusus buat kamu yang ingin cepat paham sebelum booking.
             </p>
         </div>
 

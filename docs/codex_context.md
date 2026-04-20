@@ -78,6 +78,8 @@ Dokumen ini tidak menggantikan PRD. Fungsinya adalah sebagai handoff praktis ten
 - Dashboard admin punya kartu pengaturan service fee dan footer location.
 - Service fee sekarang disimpan di `booking_settings` dan bisa diubah dari dashboard admin tanpa edit kode.
 - Footer publik menampilkan peta OpenStreetMap/Leaflet, dan alamat footer bisa diatur dari dashboard admin.
+- Admin booking management sekarang punya tombol hapus booking permanen dari list dan detail booking.
+- Penghapusan booking menggunakan cascade delete untuk data turunan seperti `booking_custom_items` dan `booking_status_logs`.
 
 ## 4. Route Penting yang Aktif Sekarang
 
@@ -96,6 +98,7 @@ Dokumen ini tidak menggantikan PRD. Fungsinya adalah sebagai handoff praktis ten
 - `GET /admin/bookings/{booking:booking_code}`
 - `PATCH /admin/bookings/{booking:booking_code}/status`
 - `PATCH /admin/bookings/{booking:booking_code}/notes`
+- `DELETE /admin/bookings/{booking:booking_code}`
 - `PATCH /admin/booking-settings/service-fee`
 - `PATCH /admin/booking-settings/footer-location`
 - `GET /admin/service-packages`
@@ -195,6 +198,7 @@ php artisan db:seed --class=AdminSeeder
 
 - `app/Http/Controllers/Admin/DashboardController.php`
 - `app/Http/Controllers/Admin/BookingManagementController.php`
+- `app/Actions/Booking/DeleteBookingAction.php`
 - `app/Http/Controllers/Admin/ServicePackageController.php`
 - `app/Http/Controllers/Admin/CustomServiceItemController.php`
 - `app/Http/Controllers/Admin/VisitorController.php`
@@ -218,6 +222,7 @@ Saat melanjutkan pengembangan, jangan rusak aturan ini:
 - slot availability divalidasi di backend
 - coverage area divalidasi di backend
 - booking tetap tersimpan walau email gagal
+- booking dapat dihapus permanen oleh admin, dan relasi child data ikut terhapus lewat cascade
 - perubahan status harus masuk `booking_status_logs`
 - `visitor_logs` menyimpan hashed IP, bukan plain IP
 
