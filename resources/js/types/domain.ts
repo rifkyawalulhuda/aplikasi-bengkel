@@ -107,6 +107,26 @@ export type BookingPagePrefill = {
     startsInCustomMode: boolean;
 };
 
+export type BookingFooterLocation = {
+    address: string;
+    latitude: string;
+    longitude: string;
+};
+
+export type BookingTransportChargeSettings = {
+    freeRadiusKm: number;
+    feePerKm: number;
+};
+
+export type BookingTransportChargePreview = {
+    distanceKm: number;
+    extraDistanceKm: number;
+    freeRadiusKm: number;
+    feePerKm: number;
+    charge: number;
+    isChargeable: boolean;
+};
+
 export type DashboardStats = {
     bookingsToday: number;
     pendingBookings: number;
@@ -238,6 +258,8 @@ export type AdminBookingDetail = {
         packagePrice: number;
         subtotal: number;
         serviceFee: number;
+        transportDistanceKm: number;
+        transportCharge: number;
         total: number;
     };
     location: {

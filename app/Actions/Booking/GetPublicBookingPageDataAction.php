@@ -11,7 +11,9 @@ use Illuminate\Support\Facades\Schema;
 class GetPublicBookingPageDataAction
 {
     public function __construct(
+        private readonly GetBookingFooterLocationAction $getBookingFooterLocation,
         private readonly GetBookingServiceFeeAction $getBookingServiceFee,
+        private readonly GetBookingTransportChargeSettingsAction $getBookingTransportChargeSettings,
     ) {}
 
     /**
@@ -36,6 +38,8 @@ class GetPublicBookingPageDataAction
      *         unitLabel: string|null
      *     }>,
      *     serviceFee: int,
+     *     footerLocation: array{address: string, latitude: string, longitude: string},
+     *     transportChargeSettings: array{freeRadiusKm: float, feePerKm: int},
      *     availableSlots: array<int, string>
      * }
      */
@@ -59,6 +63,8 @@ class GetPublicBookingPageDataAction
             'packages' => $this->packages(),
             'customItems' => $this->customItems(),
             'serviceFee' => $this->getBookingServiceFee->handle(),
+            'footerLocation' => $this->getBookingFooterLocation->handle(),
+            'transportChargeSettings' => $this->getBookingTransportChargeSettings->handle(),
             'availableSlots' => config('booking.available_hours'),
         ];
     }

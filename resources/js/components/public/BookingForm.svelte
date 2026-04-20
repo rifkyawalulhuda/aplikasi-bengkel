@@ -20,6 +20,7 @@
     import BookingSchedulePicker from './BookingSchedulePicker.svelte';
     import SectionHeading from './SectionHeading.svelte';
     import type {
+        BookingFooterLocation,
         BookingCustomerForm,
         BookingCustomItemSelection,
         BookingLocationForm,
@@ -27,15 +28,19 @@
         BookingPagePrefill,
         BookingPackageType,
         BookingScheduleForm,
+        BookingTransportChargeSettings,
         CustomServiceItemSummary,
         SelectOption,
         ServicePackageSummary,
     } from '@/types';
+    import { calculateTransportChargePreview } from '@/lib/booking-transport';
 
     let {
         packages,
         customItems,
         serviceFee: bookingServiceFee = 0,
+        footerLocation,
+        transportChargeSettings,
         availableSlots,
         packageTypes,
         motorcycleTypes,
@@ -50,6 +55,8 @@
         packages: ServicePackageSummary[];
         customItems: CustomServiceItemSummary[];
         serviceFee?: number;
+        footerLocation: BookingFooterLocation;
+        transportChargeSettings: BookingTransportChargeSettings;
         availableSlots: string[];
         packageTypes: SelectOption[];
         motorcycleTypes: SelectOption[];
@@ -142,7 +149,52 @@
     );
 
     const serviceFee = $derived(bookingServiceFee);
-    const total = $derived(subtotal + serviceFee);
+    const footerCoordinates = $derived.by(() => {
+        const latitude = Number(footerLocation.latitude);
+        const longitude = Number(footerLocation.longitude);
+
+        if (
+            Number.isNaN(latitude) ||
+            Number.isNaN(longitude) ||
+            latitude < -90 ||
+            latitude > 90 ||
+            longitude < -180 ||
+            longitude > 180
+        ) {
+            return null;
+        }
+
+        return { latitude, longitude };
+    });
+
+    const parsedCoordinates = $derived.by(() => {
+        const latitude = Number(location.latitude);
+        const longitude = Number(location.longitude);
+
+        if (
+            Number.isNaN(latitude) ||
+            Number.isNaN(longitude) ||
+            latitude < -90 ||
+            latitude > 90 ||
+            longitude < -180 ||
+            longitude > 180
+        ) {
+            return null;
+        }
+
+        return { latitude, longitude };
+    });
+
+    const transportChargePreview = $derived(
+        calculateTransportChargePreview(
+            footerCoordinates,
+            parsedCoordinates,
+            transportChargeSettings,
+        ),
+    );
+
+    const transportCharge = $derived(transportChargePreview?.charge ?? 0);
+    const total = $derived(subtotal + serviceFee + transportCharge);
 
     $effect(() => {
         const normalizedSlug = prefill.packageSlug?.trim().toLowerCase() ?? '';
@@ -760,12 +812,14 @@
                             {packageType}
                             {selectedPackage}
                             selectedCustomItems={selectedCustomItemDetails}
+                            {transportChargePreview}
                             {customer}
                             {motorcycle}
                             {location}
                             {schedule}
                             {subtotal}
                             {serviceFee}
+                            {transportCharge}
                             {total}
                         />
                     {/if}
@@ -829,8 +883,10 @@
                 {packageType}
                 {selectedPackage}
                 selectedCustomItems={selectedCustomItemDetails}
+                {transportChargePreview}
                 {subtotal}
                 {serviceFee}
+                {transportCharge}
                 {total}
             />
 

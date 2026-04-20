@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { Form, Link } from '@inertiajs/svelte';
+    import { Form, Link, router } from '@inertiajs/svelte';
     import AppHead from '@/components/AppHead.svelte';
     import BookingDetailCard from '@/components/admin/BookingDetailCard.svelte';
     import BookingStatusBadge from '@/components/admin/BookingStatusBadge.svelte';
@@ -11,6 +11,7 @@
     import { Spinner } from '@/components/ui/spinner';
     import {
         index,
+        destroy as destroyBooking,
         updateNotes,
         updateStatus,
     } from '@/actions/App/Http/Controllers/Admin/BookingManagementController';
@@ -41,6 +42,20 @@
             `Halo ${booking.customer.name}, kami dari Bengkel Home Service ingin mengonfirmasi booking ${booking.bookingCode}.`,
         ),
     );
+
+    function confirmDeleteBooking(): void {
+        const confirmed = window.confirm(
+            `Hapus booking ${booking.bookingCode}? Data booking akan dihapus permanen dan tidak bisa dikembalikan.`,
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
+        router.delete(destroyBooking(booking.bookingCode).url, {
+            preserveScroll: true,
+        });
+    }
 </script>
 
 <AppHead title={`Booking ${booking.bookingCode}`} />
@@ -86,6 +101,15 @@
         <div class="grid gap-2 text-sm text-muted-foreground">
             <p>Dikonfirmasi: {booking.confirmedAt ?? '-'}</p>
             <p>Selesai: {booking.completedAt ?? '-'}</p>
+            <Button
+                type="button"
+                variant="destructive"
+                class="mt-2 w-fit"
+                onclick={confirmDeleteBooking}
+                aria-label={`Hapus booking ${booking.bookingCode}`}
+            >
+                Hapus booking
+            </Button>
         </div>
     </div>
 
@@ -329,6 +353,17 @@
                             >{formatCurrency(booking.pricing.serviceFee)}</span
                         >
                     </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-muted-foreground">Transport</span>
+                        <span class="font-medium text-foreground">
+                            {formatCurrency(booking.pricing.transportCharge)}
+                        </span>
+                    </div>
+                    {#if booking.pricing.transportCharge > 0}
+                        <p class="text-xs leading-5 text-muted-foreground">
+                            Jarak dari bengkel sekitar {booking.pricing.transportDistanceKm.toFixed(2)} km.
+                        </p>
+                    {/if}
                     <div
                         class="flex items-center justify-between border-t border-border/70 pt-3 text-base"
                     >

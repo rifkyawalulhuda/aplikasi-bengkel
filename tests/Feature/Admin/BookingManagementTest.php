@@ -267,3 +267,50 @@ test('admin notes can be updated from booking detail page', function () {
 
     expect($booking->fresh()->admin_notes)->toBe('Customer minta datang setelah jam makan siang.');
 });
+
+test('authenticated admin can delete booking and related snapshots', function () {
+    $user = User::factory()->create();
+    $this->actingAs($user);
+
+    $booking = createAdminBooking([
+        'booking_code' => 'ASM-DELETE-0001',
+        'package_type' => 'custom_package',
+        'package_name_snapshot' => 'Paket Custom',
+        'package_price_snapshot' => 0,
+        'subtotal_price' => 125000,
+        'service_fee' => 15000,
+        'total_price' => 140000,
+    ]);
+
+    BookingCustomItem::query()->create([
+        'booking_id' => $booking->id,
+        'custom_service_item_id' => null,
+        'item_name_snapshot' => 'Ganti oli mesin',
+        'item_price_snapshot' => 45000,
+        'qty' => 1,
+        'subtotal' => 45000,
+    ]);
+
+    BookingStatusLog::query()->create([
+        'booking_id' => $booking->id,
+        'old_status' => null,
+        'new_status' => BookingStatus::Pending,
+        'changed_by' => null,
+        'note' => 'Booking created by customer.',
+    ]);
+
+    $this->delete(route('admin.bookings.destroy', $booking))
+        ->assertRedirect(route('admin.bookings.index'));
+
+    $this->assertDatabaseMissing('bookings', [
+        'id' => $booking->id,
+    ]);
+
+    $this->assertDatabaseMissing('booking_custom_items', [
+        'booking_id' => $booking->id,
+    ]);
+
+    $this->assertDatabaseMissing('booking_status_logs', [
+        'booking_id' => $booking->id,
+    ]);
+});

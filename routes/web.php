@@ -32,6 +32,7 @@ Route::prefix('admin')->name('admin.')->group(function (): void {
             Route::get('/{booking:booking_code}', 'show')->name('show');
             Route::patch('/{booking:booking_code}/status', 'updateStatus')->name('update-status');
             Route::patch('/{booking:booking_code}/notes', 'updateNotes')->name('update-notes');
+            Route::delete('/{booking:booking_code}', 'destroy')->name('destroy');
         });
 
         Route::prefix('service-packages')->name('service-packages.')->controller(ServicePackageController::class)->group(function (): void {
@@ -57,6 +58,8 @@ Route::prefix('admin')->name('admin.')->group(function (): void {
             ->name('booking-settings.service-fee');
         Route::patch('/booking-settings/footer-location', [BookingSettingController::class, 'updateFooterLocation'])
             ->name('booking-settings.footer-location');
+        Route::patch('/booking-settings/transport-charge', [BookingSettingController::class, 'updateTransportCharge'])
+            ->name('booking-settings.transport-charge');
 
         Route::get('/visitors', [VisitorController::class, 'index'])->name('visitors.index');
     });

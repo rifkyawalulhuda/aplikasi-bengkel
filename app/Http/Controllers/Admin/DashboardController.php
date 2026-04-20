@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Actions\Booking\GetBookingFooterLocationAction;
+use App\Actions\Booking\GetBookingTransportChargeSettingsAction;
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\VisitorLog;
@@ -14,8 +15,10 @@ use Inertia\Response;
 
 class DashboardController extends Controller
 {
-    public function index(GetBookingFooterLocationAction $getBookingFooterLocation): Response
-    {
+    public function index(
+        GetBookingFooterLocationAction $getBookingFooterLocation,
+        GetBookingTransportChargeSettingsAction $getBookingTransportChargeSettings,
+    ): Response {
         $stats = [
             'bookingsToday' => 0,
             'pendingBookings' => 0,
@@ -69,6 +72,7 @@ class DashboardController extends Controller
             'stats' => $stats,
             'visitorTrend' => $visitorTrend->values()->all(),
             'footerLocation' => $getBookingFooterLocation->handle(),
+            'transportChargeSettings' => $getBookingTransportChargeSettings->handle(),
             'foundationChecklist' => [
                 'Database schema siap untuk booking, paket, dan visitor analytics.',
                 'Auth admin sudah diprefix ke /admin.',

@@ -9,6 +9,8 @@ class BookingSetting extends Model
 {
     protected $fillable = [
         'service_fee',
+        'transport_free_radius_km',
+        'transport_fee_per_km',
         'footer_address',
         'footer_latitude',
         'footer_longitude',
@@ -18,6 +20,8 @@ class BookingSetting extends Model
     {
         return [
             'service_fee' => 'integer',
+            'transport_free_radius_km' => 'decimal:2',
+            'transport_fee_per_km' => 'integer',
             'footer_latitude' => 'decimal:7',
             'footer_longitude' => 'decimal:7',
         ];
@@ -28,6 +32,16 @@ class BookingSetting extends Model
         if (! Schema::hasTable('booking_settings')) {
             return new self([
                 'service_fee' => (int) config('booking.default_service_fee', 0),
+                'transport_free_radius_km' => (float) data_get(
+                    config('workshop.transport_charge'),
+                    'free_radius_km',
+                    0,
+                ),
+                'transport_fee_per_km' => (int) data_get(
+                    config('workshop.transport_charge'),
+                    'fee_per_km',
+                    0,
+                ),
                 'footer_address' => (string) data_get(
                     config('workshop.footer_location'),
                     'address',
@@ -48,6 +62,16 @@ class BookingSetting extends Model
             ['id' => 1],
             [
                 'service_fee' => (int) config('booking.default_service_fee', 0),
+                'transport_free_radius_km' => (float) data_get(
+                    config('workshop.transport_charge'),
+                    'free_radius_km',
+                    0,
+                ),
+                'transport_fee_per_km' => (int) data_get(
+                    config('workshop.transport_charge'),
+                    'fee_per_km',
+                    0,
+                ),
                 'footer_address' => (string) data_get(
                     config('workshop.footer_location'),
                     'address',
@@ -68,6 +92,27 @@ class BookingSetting extends Model
     public static function currentServiceFee(): int
     {
         return (int) static::current()->service_fee;
+    }
+
+    /**
+     * @return array{freeRadiusKm: float, feePerKm: int}
+     */
+    public static function currentTransportChargeSettings(): array
+    {
+        $current = static::current();
+
+        return [
+            'freeRadiusKm' => (float) ($current->transport_free_radius_km ?? data_get(
+                config('workshop.transport_charge'),
+                'free_radius_km',
+                0,
+            )),
+            'feePerKm' => (int) ($current->transport_fee_per_km ?? data_get(
+                config('workshop.transport_charge'),
+                'fee_per_km',
+                0,
+            )),
+        ];
     }
 
     /**

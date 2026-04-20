@@ -10,12 +10,50 @@ use Illuminate\Validation\ValidationException;
 class CalculateBookingPriceAction
 {
     public function __construct(
+        private readonly CalculateTransportChargeAction $calculateTransportCharge,
+        private readonly GetBookingFooterLocationAction $getBookingFooterLocation,
         private readonly GetBookingServiceFeeAction $getBookingServiceFee,
+        private readonly GetBookingTransportChargeSettingsAction $getBookingTransportChargeSettings,
     ) {}
 
-    public function handle(PackageType $packageType, ?int $servicePackageId, array $customItems = []): array
-    {
+    /**
+     * @param  array<int, array{id: int, qty: int}>  $customItems
+     * @return array{
+     *     package_name_snapshot: string,
+     *     package_price_snapshot: int,
+     *     subtotal_price: int,
+     *     service_fee: int,
+     *     transport_distance_km: float,
+     *     transport_charge: int,
+     *     total_price: int,
+     *     custom_items_snapshot: array<int, array{
+     *         custom_service_item_id: int,
+     *         item_name_snapshot: string,
+     *         item_price_snapshot: int,
+     *         qty: int,
+     *         subtotal: int
+     *     }>
+     * }
+     */
+    public function handle(
+        PackageType $packageType,
+        ?int $servicePackageId,
+        array $customItems = [],
+        ?float $destinationLatitude = null,
+        ?float $destinationLongitude = null,
+    ): array {
         $serviceFee = $this->getBookingServiceFee->handle();
+        $transportChargeSettings = $this->getBookingTransportChargeSettings->handle();
+        $footerLocation = $this->getBookingFooterLocation->handle();
+
+        $transportCharge = $this->calculateTransportCharge->handle(
+            originLatitude: (float) $footerLocation['latitude'],
+            originLongitude: (float) $footerLocation['longitude'],
+            destinationLatitude: $destinationLatitude ?? (float) $footerLocation['latitude'],
+            destinationLongitude: $destinationLongitude ?? (float) $footerLocation['longitude'],
+            freeRadiusKm: (float) $transportChargeSettings['freeRadiusKm'],
+            feePerKm: (int) $transportChargeSettings['feePerKm'],
+        );
 
         if ($packageType === PackageType::FixedPackage) {
             $servicePackage = ServicePackage::query()
@@ -33,7 +71,9 @@ class CalculateBookingPriceAction
                 'package_price_snapshot' => $servicePackage->price,
                 'subtotal_price' => $servicePackage->price,
                 'service_fee' => $serviceFee,
-                'total_price' => $servicePackage->price + $serviceFee,
+                'transport_distance_km' => $transportCharge['distanceKm'],
+                'transport_charge' => $transportCharge['charge'],
+                'total_price' => $servicePackage->price + $serviceFee + $transportCharge['charge'],
                 'custom_items_snapshot' => [],
             ];
         }
@@ -90,7 +130,9 @@ class CalculateBookingPriceAction
             'package_price_snapshot' => 0,
             'subtotal_price' => $subtotal,
             'service_fee' => $serviceFee,
-            'total_price' => $subtotal + $serviceFee,
+            'transport_distance_km' => $transportCharge['distanceKm'],
+            'transport_charge' => $transportCharge['charge'],
+            'total_price' => $subtotal + $serviceFee + $transportCharge['charge'],
             'custom_items_snapshot' => $snapshots->all(),
         ];
     }

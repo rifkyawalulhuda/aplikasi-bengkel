@@ -29,9 +29,6 @@
             <h2 class="mt-4 text-balance text-3xl font-black tracking-[-0.04em] text-foreground md:text-5xl">
                 Pilih paket yang paling pas, lalu lanjutkan ke <span class="text-primary">booking</span> dalam satu alur yang ringkas.
             </h2>
-            <p class="mt-4 text-base leading-7 text-muted-foreground md:text-lg">
-                Data paket tetap dibaca langsung dari database aktif, jadi harga dan item layanan yang tampil di sini selaras dengan flow booking.
-            </p>
         </div>
 
         {#if featuredPackages.length > 0}

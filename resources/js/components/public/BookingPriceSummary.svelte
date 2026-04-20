@@ -4,6 +4,7 @@
     import ReceiptText from 'lucide-svelte/icons/receipt-text';
     import { Badge } from '@/components/ui/badge';
     import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+    import type { BookingTransportChargePreview } from '@/lib/booking-transport';
     import type {
         BookingPackageType,
         CustomServiceItemSummary,
@@ -14,15 +15,19 @@
         packageType,
         selectedPackage,
         selectedCustomItems,
+        transportChargePreview = null,
         subtotal,
         serviceFee,
+        transportCharge,
         total,
     }: {
         packageType: BookingPackageType;
         selectedPackage: ServicePackageSummary | null;
         selectedCustomItems: Array<CustomServiceItemSummary & { qty: number; subtotal: number }>;
+        transportChargePreview?: BookingTransportChargePreview | null;
         subtotal: number;
         serviceFee: number;
+        transportCharge: number;
         total: number;
     } = $props();
 
@@ -183,6 +188,17 @@
                             <span class="text-slate-500">Service fee</span>
                             <strong>Rp {serviceFee.toLocaleString('id-ID')}</strong>
                         </div>
+                        <div class="flex items-center justify-between gap-4">
+                            <span class="text-slate-500">Transport</span>
+                            <strong>Rp {transportCharge.toLocaleString('id-ID')}</strong>
+                        </div>
+                        {#if transportChargePreview}
+                            <p class="text-xs leading-5 text-slate-500">
+                                {transportChargePreview.isChargeable
+                                    ? `Jarak ${transportChargePreview.distanceKm.toFixed(1)} km, radius gratis ${transportChargePreview.freeRadiusKm.toFixed(1)} km, tarif Rp ${transportChargePreview.feePerKm.toLocaleString('id-ID')}/km di luar radius.`
+                                    : `Lokasi masih di dalam radius gratis ${transportChargePreview.freeRadiusKm.toFixed(1)} km.`}
+                            </p>
+                        {/if}
                         <div
                             class="flex items-center justify-between gap-4 border-t border-slate-200 pt-3 text-base"
                         >
@@ -253,6 +269,17 @@
                 <span class="text-muted-foreground">Service fee</span>
                 <strong>Rp {serviceFee.toLocaleString('id-ID')}</strong>
             </div>
+            <div class="flex items-center justify-between gap-4">
+                <span class="text-muted-foreground">Transport</span>
+                <strong>Rp {transportCharge.toLocaleString('id-ID')}</strong>
+            </div>
+            {#if transportChargePreview}
+                <p class="text-xs leading-5 text-muted-foreground">
+                    {transportChargePreview.isChargeable
+                        ? `Jarak ${transportChargePreview.distanceKm.toFixed(1)} km, radius gratis ${transportChargePreview.freeRadiusKm.toFixed(1)} km, tarif Rp ${transportChargePreview.feePerKm.toLocaleString('id-ID')}/km di luar radius.`
+                        : `Lokasi masih di dalam radius gratis ${transportChargePreview.freeRadiusKm.toFixed(1)} km.`}
+                </p>
+            {/if}
             <div class="flex items-center justify-between gap-4 border-t border-border/70 pt-3 text-base">
                 <span class="font-semibold text-foreground">Total preview</span>
                 <strong class="text-primary">Rp {total.toLocaleString('id-ID')}</strong>

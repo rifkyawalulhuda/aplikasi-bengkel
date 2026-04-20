@@ -41,6 +41,8 @@ class CreateBookingAction
                     ? ($attributes['service_package_id'] ?? null)
                     : null,
                 customItems: $attributes['custom_items'] ?? [],
+                destinationLatitude: (float) $attributes['latitude'],
+                destinationLongitude: (float) $attributes['longitude'],
             );
 
             $statusLogNote = 'Booking created by customer.';
@@ -71,6 +73,8 @@ class CreateBookingAction
                 'status' => BookingStatus::Pending,
                 'subtotal_price' => $pricing['subtotal_price'],
                 'service_fee' => $pricing['service_fee'],
+                'transport_distance_km' => $pricing['transport_distance_km'],
+                'transport_charge' => $pricing['transport_charge'],
                 'total_price' => $pricing['total_price'],
                 'address_text' => $attributes['address_text'],
                 'house_landmark' => $attributes['house_landmark'],

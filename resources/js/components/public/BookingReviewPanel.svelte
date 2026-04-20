@@ -1,6 +1,7 @@
 <script lang="ts">
     import { Badge } from '@/components/ui/badge';
     import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+    import type { BookingTransportChargePreview } from '@/lib/booking-transport';
     import type {
         BookingCustomerForm,
         BookingLocationForm,
@@ -15,23 +16,27 @@
         packageType,
         selectedPackage,
         selectedCustomItems,
+        transportChargePreview = null,
         customer,
         motorcycle,
         location,
         schedule,
         subtotal,
         serviceFee,
+        transportCharge,
         total,
     }: {
         packageType: BookingPackageType;
         selectedPackage: ServicePackageSummary | null;
         selectedCustomItems: Array<CustomServiceItemSummary & { qty: number; subtotal: number }>;
+        transportChargePreview?: BookingTransportChargePreview | null;
         customer: BookingCustomerForm;
         motorcycle: BookingMotorcycleForm;
         location: BookingLocationForm;
         schedule: BookingScheduleForm;
         subtotal: number;
         serviceFee: number;
+        transportCharge: number;
         total: number;
     } = $props();
 </script>
@@ -120,6 +125,17 @@
                 <span class="text-muted-foreground">Service fee</span>
                 <strong>Rp {serviceFee.toLocaleString('id-ID')}</strong>
             </div>
+            <div class="mt-2 flex items-center justify-between gap-4">
+                <span class="text-muted-foreground">Transport</span>
+                <strong>Rp {transportCharge.toLocaleString('id-ID')}</strong>
+            </div>
+            {#if transportChargePreview}
+                <p class="mt-2 text-xs leading-5 text-muted-foreground">
+                    {transportChargePreview.isChargeable
+                        ? `Jarak ${transportChargePreview.distanceKm.toFixed(1)} km, radius gratis ${transportChargePreview.freeRadiusKm.toFixed(1)} km, tarif Rp ${transportChargePreview.feePerKm.toLocaleString('id-ID')}/km di luar radius.`
+                        : `Lokasi masih di dalam radius gratis ${transportChargePreview.freeRadiusKm.toFixed(1)} km.`}
+                </p>
+            {/if}
             <div class="mt-3 flex items-center justify-between gap-4 border-t border-border/70 pt-3 text-base">
                 <span class="font-semibold text-foreground">Total preview</span>
                 <strong class="text-primary">Rp {total.toLocaleString('id-ID')}</strong>

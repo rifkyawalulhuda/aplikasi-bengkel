@@ -13,6 +13,10 @@ return [
         'latitude' => env('WORKSHOP_FOOTER_LATITUDE', '-6.3025000'),
         'longitude' => env('WORKSHOP_FOOTER_LONGITUDE', '107.3035000'),
     ],
+    'transport_charge' => [
+        'free_radius_km' => env('WORKSHOP_TRANSPORT_FREE_RADIUS_KM', '10'),
+        'fee_per_km' => env('WORKSHOP_TRANSPORT_FEE_PER_KM', '5000'),
+    ],
     'service_areas' => [
         'Karawang bagian barat',
         'karawang bagian timur',

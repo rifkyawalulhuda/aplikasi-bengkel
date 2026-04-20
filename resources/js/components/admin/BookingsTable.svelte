@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { Link } from '@inertiajs/svelte';
+    import { Link, router } from '@inertiajs/svelte';
     import BookingStatusBadge from '@/components/admin/BookingStatusBadge.svelte';
     import { Button } from '@/components/ui/button';
     import {
@@ -10,6 +10,7 @@
     } from '@/components/ui/card';
     import {
         index,
+        destroy as destroyBooking,
         show,
     } from '@/actions/App/Http/Controllers/Admin/BookingManagementController';
     import { formatCurrency } from '@/lib/utils';
@@ -105,6 +106,20 @@
 
         return '↕';
     }
+
+    function confirmDeleteBooking(bookingCode: string): void {
+        const confirmed = window.confirm(
+            `Hapus booking ${bookingCode}? Data booking akan dihapus permanen dan tidak bisa dikembalikan.`,
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
+        router.delete(destroyBooking(bookingCode).url, {
+            preserveScroll: true,
+        });
+    }
 </script>
 
 <Card class="border-primary/16 bg-white/88 shadow-[0_24px_54px_-40px_rgb(var(--brand-primary-rgb)/0.36)] backdrop-blur-sm">
@@ -168,7 +183,7 @@
                                     {booking.serviceTime}
                                 </p>
                             </div>
-                            <div class="flex items-center justify-between">
+                            <div class="flex flex-wrap items-center justify-between gap-2">
                                 <div>
                                     <p class="text-muted-foreground">Total</p>
                                     <p class="font-semibold text-foreground">
@@ -176,17 +191,32 @@
                                     </p>
                                 </div>
 
-                                <Button asChild size="sm" variant="outline">
-                                    {#snippet children(props)}
-                                        <Link
-                                            href={show(booking.bookingCode).url}
-                                            aria-label={`Buka detail booking ${booking.bookingCode}`}
-                                            {...props}
-                                        >
-                                            Detail
-                                        </Link>
-                                    {/snippet}
-                                </Button>
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <Button asChild size="sm" variant="outline">
+                                        {#snippet children(props)}
+                                            <Link
+                                                href={show(booking.bookingCode).url}
+                                                aria-label={`Buka detail booking ${booking.bookingCode}`}
+                                                {...props}
+                                            >
+                                                Detail
+                                            </Link>
+                                        {/snippet}
+                                    </Button>
+
+                                    <Button
+                                        type="button"
+                                        size="sm"
+                                        variant="destructive"
+                                        onclick={() =>
+                                            confirmDeleteBooking(
+                                                booking.bookingCode,
+                                            )}
+                                        aria-label={`Hapus booking ${booking.bookingCode}`}
+                                    >
+                                        Hapus
+                                    </Button>
+                                </div>
                             </div>
 
                             {#if booking.requiresManualReview}
@@ -349,18 +379,32 @@
                                     {formatCurrency(booking.totalPrice)}
                                 </td>
                                 <td class="px-3 py-4 text-right align-top">
-                                    <Button asChild size="sm" variant="outline">
-                                        {#snippet children(props)}
-                                            <Link
-                                                href={show(booking.bookingCode)
-                                                    .url}
-                                                aria-label={`Buka detail booking ${booking.bookingCode}`}
-                                                {...props}
-                                            >
-                                                Detail
-                                            </Link>
-                                        {/snippet}
-                                    </Button>
+                                    <div class="flex items-center justify-end gap-2">
+                                        <Button asChild size="sm" variant="outline">
+                                            {#snippet children(props)}
+                                                <Link
+                                                    href={show(booking.bookingCode).url}
+                                                    aria-label={`Buka detail booking ${booking.bookingCode}`}
+                                                    {...props}
+                                                >
+                                                    Detail
+                                                </Link>
+                                            {/snippet}
+                                        </Button>
+
+                                        <Button
+                                            type="button"
+                                            size="sm"
+                                            variant="destructive"
+                                            onclick={() =>
+                                                confirmDeleteBooking(
+                                                    booking.bookingCode,
+                                                )}
+                                            aria-label={`Hapus booking ${booking.bookingCode}`}
+                                        >
+                                            Hapus
+                                        </Button>
+                                    </div>
                                 </td>
                             </tr>
                         {/each}

@@ -2,7 +2,9 @@
     import AppHead from '@/components/AppHead.svelte';
     import BookingForm from '@/components/public/BookingForm.svelte';
     import type {
+        BookingFooterLocation,
         BookingPagePrefill,
+        BookingTransportChargeSettings,
         CustomServiceItemSummary,
         SelectOption,
         SeoMetadata,
@@ -14,6 +16,8 @@
         packages,
         customItems,
         serviceFee,
+        footerLocation,
+        transportChargeSettings,
         availableSlots,
         packageTypes,
         motorcycleTypes,
@@ -23,6 +27,8 @@
         packages: ServicePackageSummary[];
         customItems: CustomServiceItemSummary[];
         serviceFee: number;
+        footerLocation: BookingFooterLocation;
+        transportChargeSettings: BookingTransportChargeSettings;
         availableSlots: string[];
         packageTypes: SelectOption[];
         motorcycleTypes: SelectOption[];
@@ -41,6 +47,8 @@
     {packages}
     {customItems}
     {serviceFee}
+    {footerLocation}
+    {transportChargeSettings}
     {availableSlots}
     {packageTypes}
     {motorcycleTypes}

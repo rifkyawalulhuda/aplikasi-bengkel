@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\Booking\DeleteBookingAction;
 use App\Actions\Booking\UpdateBookingNotesAction;
 use App\Actions\Booking\UpdateBookingStatusAction;
 use App\Http\Controllers\Controller;
@@ -146,6 +147,8 @@ class BookingManagementController extends Controller
                     'packagePrice' => $booking->package_price_snapshot,
                     'subtotal' => $booking->subtotal_price,
                     'serviceFee' => $booking->service_fee,
+                    'transportDistanceKm' => (float) $booking->transport_distance_km,
+                    'transportCharge' => $booking->transport_charge,
                     'total' => $booking->total_price,
                 ],
                 'location' => [
@@ -209,6 +212,20 @@ class BookingManagementController extends Controller
         ]);
 
         return to_route('admin.bookings.show', $booking);
+    }
+
+    public function destroy(
+        Booking $booking,
+        DeleteBookingAction $deleteBooking,
+    ): RedirectResponse {
+        $deleteBooking->handle($booking);
+
+        Inertia::flash('toast', [
+            'type' => 'success',
+            'message' => 'Booking berhasil dihapus permanen.',
+        ]);
+
+        return to_route('admin.bookings.index');
     }
 
     private function mapUrl(Booking $booking): string

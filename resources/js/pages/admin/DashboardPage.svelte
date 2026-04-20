@@ -1,6 +1,7 @@
 <script lang="ts">
     import AppHead from '@/components/AppHead.svelte';
     import BookingFooterLocationCard from '@/components/admin/BookingFooterLocationCard.svelte';
+    import BookingTransportChargeCard from '@/components/admin/BookingTransportChargeCard.svelte';
     import DashboardStatCard from '@/components/admin/DashboardStatCard.svelte';
     import { Badge } from '@/components/ui/badge';
     import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,6 +11,7 @@
         stats,
         visitorTrend,
         footerLocation,
+        transportChargeSettings,
         foundationChecklist,
     }: {
         stats: DashboardStats;
@@ -18,6 +20,10 @@
             address: string;
             latitude: string;
             longitude: string;
+        };
+        transportChargeSettings: {
+            freeRadiusKm: number;
+            feePerKm: number;
         };
         foundationChecklist: string[];
     } = $props();
@@ -108,5 +114,8 @@
         </Card>
     </div>
 
-    <BookingFooterLocationCard {footerLocation} />
+    <div class="grid gap-4 xl:grid-cols-2">
+        <BookingTransportChargeCard {transportChargeSettings} />
+        <BookingFooterLocationCard {footerLocation} />
+    </div>
 </div>

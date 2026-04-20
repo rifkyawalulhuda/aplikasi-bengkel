@@ -168,6 +168,8 @@ test('dashboard exposes footer location settings to admin', function () {
         'footer_address' => 'Jl. Badami Ciherang, Telukjambe Barat, Kab. Karawang',
         'footer_latitude' => '-6.3025000',
         'footer_longitude' => '107.3035000',
+        'transport_free_radius_km' => 10,
+        'transport_fee_per_km' => 5000,
     ]);
 
     $this->get(route('admin.dashboard'))
@@ -176,5 +178,7 @@ test('dashboard exposes footer location settings to admin', function () {
             ->component('admin/DashboardPage')
             ->where('footerLocation.address', 'Jl. Badami Ciherang, Telukjambe Barat, Kab. Karawang')
             ->where('footerLocation.latitude', '-6.3025000')
-            ->where('footerLocation.longitude', '107.3035000'));
+            ->where('footerLocation.longitude', '107.3035000')
+            ->where('transportChargeSettings.freeRadiusKm', 10)
+            ->where('transportChargeSettings.feePerKm', 5000));
 });
