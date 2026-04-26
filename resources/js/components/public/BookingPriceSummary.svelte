@@ -63,9 +63,9 @@
         ></button>
     {/if}
 
-    <div class="pointer-events-none fixed inset-x-0 bottom-0 z-40 px-4 pb-4">
+    <div class="pointer-events-none fixed inset-x-0 bottom-0 z-[60] px-4 pb-4">
         <div
-            class="pointer-events-auto mx-auto max-w-xl overflow-hidden rounded-[1.6rem] border border-slate-900/10 bg-slate-950/94 text-white shadow-[0_-12px_40px_-18px_rgba(15,23,42,0.65)]"
+            class="pointer-events-auto relative z-[60] mx-auto max-w-xl overflow-hidden rounded-[1.6rem] border border-slate-900/10 bg-slate-950/94 text-white shadow-[0_-12px_40px_-18px_rgba(15,23,42,0.65)]"
         >
             <button
                 type="button"

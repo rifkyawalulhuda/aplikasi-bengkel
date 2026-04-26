@@ -116,6 +116,15 @@ Setelah `.env` benar, jalankan:
 php artisan migrate --force
 ```
 
+Gunakan Seeder DB default :
+
+```bash
+rtk php artisan db:seed --no-interaction
+```
+
+admin@bengkel.test
+password
+
 Jika database kosong, perintah ini akan membuat seluruh tabel yang dibutuhkan aplikasi.
 
 ## 7. Buat Storage Link

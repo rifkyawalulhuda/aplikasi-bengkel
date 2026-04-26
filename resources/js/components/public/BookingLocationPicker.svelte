@@ -663,7 +663,7 @@
     });
 </script>
 
-<div class="space-y-6">
+<div class="relative z-0 space-y-6">
     <div class="space-y-2">
         <h3 class="text-lg font-semibold text-foreground">3. Lokasi servis</h3>
         <p class="text-sm leading-6 text-muted-foreground">
@@ -699,45 +699,47 @@
             </Button>
         </div>
 
-        <div class="mt-4 overflow-hidden rounded-[1.25rem] border border-border/70">
+        <div class="relative z-0 isolate mt-4 overflow-hidden rounded-[1.5rem] border border-border/70 bg-card/95 shadow-sm">
             <div
                 bind:this={mapContainer}
                 role="img"
                 aria-label="Peta lokasi servis"
-                class="h-[320px] w-full bg-muted sm:h-[380px]"
+                class="h-[280px] w-full bg-muted sm:h-[380px]"
             ></div>
-        </div>
 
-        <div class="mt-4 flex flex-col gap-3 rounded-[1.25rem] bg-muted p-4 text-sm leading-6">
-            {#if locationFeedback}
-                <p
-                    class={
-                        locationFeedbackTone === 'error'
-                            ? 'text-destructive'
-                            : locationFeedbackTone === 'success'
-                              ? 'text-emerald-600'
-                              : 'text-muted-foreground'
-                    }
-                >
-                    {locationFeedback}
-                </p>
-            {:else}
-                <p class="text-muted-foreground">
-                    Belum ada titik terpilih. Pakai lokasi perangkat atau klik
-                    peta untuk mengisi koordinat.
-                </p>
-            {/if}
+            <div class="pointer-events-none absolute inset-x-4 bottom-4 z-20">
+                <div class="pointer-events-auto flex flex-col gap-3 rounded-[1.25rem] border border-border/70 bg-card/95 p-4 text-sm leading-6 shadow-lg backdrop-blur-sm">
+                    {#if locationFeedback}
+                        <p
+                            class={
+                                locationFeedbackTone === 'error'
+                                    ? 'text-destructive'
+                                    : locationFeedbackTone === 'success'
+                                      ? 'text-emerald-600'
+                                      : 'text-muted-foreground'
+                            }
+                        >
+                            {locationFeedback}
+                        </p>
+                    {:else}
+                        <p class="text-muted-foreground">
+                            Belum ada titik terpilih. Pakai lokasi perangkat atau klik
+                            peta untuk mengisi koordinat.
+                        </p>
+                    {/if}
 
-            {#if mapsUrl}
-                <a
-                    href={mapsUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    class="inline-flex w-fit text-sm font-medium text-primary underline-offset-4 hover:underline"
-                >
-                    Buka titik ini di OpenStreetMap
-                </a>
-            {/if}
+                    {#if mapsUrl}
+                        <a
+                            href={mapsUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            class="inline-flex w-fit text-sm font-medium text-primary underline-offset-4 hover:underline"
+                        >
+                            Buka titik ini di OpenStreetMap
+                        </a>
+                    {/if}
+                </div>
+            </div>
         </div>
     </div>
 
